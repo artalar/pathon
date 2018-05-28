@@ -1,0 +1,44 @@
+{
+  "name": "pathon",
+  "version": "1.0.0",
+  "description": "fast lens-like state manager",
+  "main": "lib",
+  "module": "es",
+  "scripts": {
+    "prepublishOnly": "npm run rebuild:es && npm run rebuild:cjs",
+    "postpublish": "npm run clean",
+    "build": "npm run build:cjs && npm run build:es",
+    "build:cjs": "cross-env BABEL_ENV=commonjs babel src/ -d lib -s",
+    "build:es": "babel src/ -d es -s",
+    "clean": "npm run clean:es && npm run clean:cjs",
+    "clean:cjs": "rimraf lib/",
+    "clean:es": "rimraf es/",
+    "rebuild:cjs": "npm run clean:cjs & npm run build:cjs",
+    "rebuild:es": "npm run clean:es & npm run build:es"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0-beta.42",
+    "@babel/core": "^7.0.0-beta.42",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.42",
+    "@babel/polyfill": "^7.0.0-beta.42",
+    "@babel/preset-env": "^7.0.0-beta.42",
+    "cross-env": "^5.1.4",
+    "rimraf": "^2.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/artalar/pathon.git"
+  },
+  "license": "MIT",
+  "readme": "README.md",
+  "keywords": [
+    "state-manager",
+    "state",
+    "lens"
+  ],
+  "author": "artalar",
+  "bugs": {
+    "url": "https://github.com/artalar/pathon/issues"
+  },
+  "homepage": "https://github.com/artalar/pathon#readme"
+}
