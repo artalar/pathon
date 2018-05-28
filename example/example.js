@@ -2,7 +2,7 @@
   EXAMPLE
 */
 
-import { createRootPath, immutablePreset } from 'pathon';
+import { createRootPath, immutablePreset } from '../src/';
 
 const createLogger = id => (...args) => console.log(`ID: ${id}`, ...args);
 
