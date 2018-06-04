@@ -1,2 +1,2 @@
-export { createRootPath } from "./pathon";
-export { immutablePreset } from "./presets";
+export { path } from './pathon';
+export { mutablePreset, immutablePreset } from './presets';
