@@ -1,4 +1,3 @@
-
 // TODO: tests
 // match unsupported types and throw error?
 export const immutablePreset = {
@@ -24,8 +23,11 @@ export const immutablePreset = {
       const newState = state.slice();
       newState[path] = payload;
       return newState;
-    } else {
+    } else if (typeof state === "object" && state !== null) {
       return { ...state, [path]: payload };
+    } else {
+      // FIXME: ?
+      return payload;
     }
   },
   get: state => state,
@@ -34,8 +36,11 @@ export const immutablePreset = {
       return state.get(path);
     } else if (state instanceof Set) {
       return [...state][path];
-    } else {
+    } else if (typeof state === "object" && state !== null) {
       return state[path];
+    } else {
+      // FIXME: ?
+      return state;
     }
   },
   // optional memorization
