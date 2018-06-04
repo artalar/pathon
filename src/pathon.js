@@ -1,3 +1,5 @@
+// TODO: `compose`, `.watch.map(mapper, ?comparator)` and `.watch.shape(mapper, ?comparator)`
+
 export const path = (key, initialState, updaterPreset) =>
   createPath(
     key, //
@@ -113,3 +115,12 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
     },
   };
 };
+
+get,
+set,
+getPath,
+getPathFull,
+watch,
+unwatch,
+path
+
