@@ -92,7 +92,6 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
     getPathFull,
     watch,
     unwatch,
-    // TODO: createPath
     path: (childKey, childInitialState, childUpdaterPreset = updaterPreset) => {
       if (childList.has(childKey) === true) return childList.get(childKey);
 
