@@ -1,10 +1,12 @@
+# WIP
+
+> this package in beta.
+
 # pathon
 
 <!-- path + O(n) ? -->
 
-# WIP
-
-this package in beta.
+> `pathon` doing one job - and doing it great - state management. No more architecture or workflow dependence. Just observable state with maximum performance
 
 ### Stable alpha
 
