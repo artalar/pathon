@@ -1,134 +1,115 @@
-// TODO: `compose`, `.watch.map(mapper, ?comparator)` and `.watch.shape(mapper, ?comparator)`
+export const path = (key, initialState, updaterPreset) =>
+  createPath(
+    key, //
+    initialState, //
+    updaterPreset, //
+    createMainCore(key, initialState, updaterPreset) // parent
+  );
 
-// TODO: simplify to one universal `createPath` (without createRootPath)?
-// optimaize `createPath` for existing `path` (memorize `path`)
+const createMainCore = (key, initialState, updaterPreset) => {
+  const state = new Map([[key, initialState]]);
 
-const createPath = (path, defaultConfig, parent) => {
-  const getByPathPreset = defaultConfig.getByPath(path);
-  const setByPathPreset = defaultConfig.setByPath(path);
-  const pathFull = `${parent.path}.${path}`;
-  const parentSet = parent.set;
-  const parentGet = parent.get;
-  const addWatcher = parent.addWatcher;
-  const deleteWatcher = parent.deleteWatcher;
-  const scheduleUpdate = parent.scheduleUpdate;
-  const update = parent.update;
+  const get = () => state;
 
-  const get = () => getByPathPreset(parentGet());
-
-  const set = (...payload) => {
-    scheduleUpdate(pathFull, get);
-    parentSet(setByPathPreset(parentGet(), ...payload));
-    update();
-    return get();
+  const setOwnStateToParentStateByPath = (childKey, childNewState) => {
+    state.set(childKey, childNewState);
   };
 
-  return {
-    get state() {
-      return get();
-    },
-    thisPath: path,
-    thisPathFull: pathFull,
-    get,
-    set,
-    watch: callback => addWatcher(pathFull, callback),
-    unwatch: callback => deleteWatcher(pathFull, callback),
-    path: (pathInner, config = defaultConfig) => {
-      const pathFullNew = `${pathFull}.${pathInner}`;
-      let newPath = parent.allPath.get(pathFullNew);
-      if (newPath) return newPath;
-      newPath =
-        parent.allPath.get(newPath) ||
-        createPath(pathInner, config, {
-          path: pathFull,
-          get,
-          set,
-          addWatcher,
-          deleteWatcher,
-          scheduleUpdate,
-          update
-        });
-      parent.allPath.set(pathFullNew, newPath);
-      return newPath;
+  const updates = new Map();
+  let nestedLevel = 0;
+  const addWatchersForUpdate = (watchers, state) => void updates.set(watchers, state);
+  const freezeWatchers = () => void ++nestedLevel;
+  const unfreezeWatchers = () => {
+    if (--nestedLevel !== 0) return;
+    for (const [watchers, state] of updates) {
+      watchers.forEach(watcher => watcher(state));
     }
+    updates.clear();
+  };
+
+  const defaultPath = [];
+  const getPath = () => defaultPath;
+
+  return {
+    get,
+    setChildStateToOwnStateByPath: setOwnStateToParentStateByPath,
+    addWatchersForUpdate,
+    freezeWatchers,
+    unfreezeWatchers,
+    getPath,
   };
 };
 
-export const createRootPath = (initialState, name = "root", defaultConfig) => {
-  let state = initialState;
+const createPath = (key, initialState = {}, updaterPreset, parent) => {
+  const getOwnStateFromParentStateByPath = updaterPreset.getValueByKey;
+  const mergeStateAndPayload = updaterPreset.mergeStateAndPayload;
+  const insertValueToStateByPath = updaterPreset.insertValueToStateByPath;
+  const stateHasPath = updaterPreset.hasPath;
 
-  const watchers = new Map();
-  const watch = (path, callback) => {
-    watchers.set(path, callback);
-    return () => watchers.delete(callback);
+  const getParentState = parent.get;
+  const setOwnStateToParentStateByPath = parent.setChildStateToOwnStateByPath;
+  const addWatchersForUpdate = parent.addWatchersForUpdate;
+  const freezeWatchers = parent.freezeWatchers;
+  const unfreezeWatchers = parent.unfreezeWatchers;
+  const getPathParent = parent.getPath;
+
+  const get = () => getOwnStateFromParentStateByPath(getParentState(), key);
+
+  const set = payload => {
+    freezeWatchers();
+    const newState = mergeStateAndPayload(get(), payload);
+    addWatchersForUpdate(watchers, newState);
+    setOwnStateToParentStateByPath(key, newState);
+    unfreezeWatchers();
+  };
+
+  const setChildStateToOwnStateByPath = (childKey, childState) => {
+    freezeWatchers();
+    const newState = insertValueToStateByPath(get(), childKey, childState);
+    addWatchersForUpdate(watchers, newState);
+    setOwnStateToParentStateByPath(key, newState);
+    unfreezeWatchers();
+  };
+
+  const getPath = () => key;
+  const getPathFull = () => [...getPathParent(), key];
+
+  const watchers = new Set();
+  const watch = callback => {
+    watchers.add(callback);
+    return /* or `get()` ? */ () => watchers.delete(callback);
   };
   const unwatch = callback => watchers.delete(callback);
 
-  // test
-  /* const allPathObj = {};
-  const allPath = {
-    set(a, b) {
-      allPathObj[a] = b;
-    },
-    get(a) {
-      return allPathObj[a]
-    }
-  } */
-
-  const allPath = new Map();
-
-  let nestedLevel = 0;
-  const schedule = new Map();
-  const scheduleUpdate = (path, getter) => {
-    nestedLevel++;
-    schedule.set(path, getter);
-  };
-  const update = () => {
-    if (--nestedLevel !== 0) return;
-    for (const [path, getter] of schedule) {
-      const callback = watchers.get(path) || (() => {});
-      callback(getter());
-    }
-    schedule.clear();
-  };
-
-  const get = () => defaultConfig.get(state);
-  const set = (...payload) => {
-    scheduleUpdate(name, get);
-    state = defaultConfig.set(state, ...payload);
-    update();
-    return get();
-  };
-
-  const path = (pathInner, config = defaultConfig) => {
-    const pathFullNew = `${name}.${pathInner}`;
-    let newPath = allPath.get(pathFullNew);
-    if (newPath) return newPath;
-
-    newPath = createPath(pathInner, config, {
-      path: name,
-      get,
-      set,
-      addWatcher: watch,
-      deleteWatcher: unwatch,
-      scheduleUpdate,
-      update
-    });
-
-    allPath.set(pathFullNew, newPath);
-    return newPath;
-  };
+  const childList = new Map();
 
   return {
-    get state() {
-      return get();
-    },
-    thisPath: name,
-    thisPathFull: name,
     get,
     set,
-    path,
-    watch: callback => watch(name, callback),
-    unwatch
+    getPath,
+    getPathFull,
+    watch,
+    unwatch,
+    // TODO: createPath
+    path: (childKey, childInitialState, childUpdaterPreset = updaterPreset) => {
+      if (childList.has(childKey) === true) return childList.get(childKey);
+
+      const childPath = createPath(childKey, childInitialState, childUpdaterPreset, {
+        get,
+        setChildStateToOwnStateByPath,
+        addWatchersForUpdate,
+        freezeWatchers,
+        unfreezeWatchers,
+        getPath: getPathFull,
+      });
+
+      childList.set(childKey, childPath);
+
+      if (childInitialState !== undefined && stateHasPath(get(), childKey) === false) {
+        setChildStateToOwnStateByPath(childKey, childInitialState);
+      }
+
+      return childPath;
+    },
   };
 };
