@@ -115,12 +115,3 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
     },
   };
 };
-
-get,
-set,
-getPath,
-getPathFull,
-watch,
-unwatch,
-path
-
