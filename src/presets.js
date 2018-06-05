@@ -1,7 +1,7 @@
 // TODO: tests
 // match unsupported types and throw error?
 
-export const mutablePreset = {
+const mutablePreset = {
   hasPath(state, key) {
     if (state instanceof Map || state instanceof Set) {
       return state.has(key);
@@ -42,7 +42,7 @@ export const mutablePreset = {
   },
 };
 
-export const immutablePreset = {
+const immutablePreset = {
   hasPath(state, key) {
     if (state instanceof Map || state instanceof Set) {
       return state.has(key);
@@ -96,3 +96,5 @@ export const immutablePreset = {
     }
   },
 };
+
+module.exports = { mutablePreset, immutablePreset };

@@ -1,18 +1,18 @@
-import { createRootPath } from "./pathon";
-import { immutablePreset } from "./presets";
+const path = require('./pathon').path;
+const immutablePreset = require('./presets').immutablePreset;
 
 describe("pathon", () => {
   it("new root path structure", () => {
-    const pathRoot = createRootPath({}, "root", immutablePreset);
+    const pathRoot = path("root", {}, immutablePreset);
     expect(typeof pathRoot.set).toBe("function");
     expect(typeof pathRoot.get).toBe("function");
     expect(typeof pathRoot.watch).toBe("function");
     expect(typeof pathRoot.unwatch).toBe("function");
   });
   it("new path structure", () => {
-    const pathCount = createRootPath(
-      { count: 0 },
+    const pathCount = path(
       "root",
+      { count: 0 },
       immutablePreset
     ).path("count");
     expect(typeof pathCount.set).toBe("function");
@@ -22,7 +22,7 @@ describe("pathon", () => {
   });
   it("root path state", () => {
     const initialState = {};
-    const pathRoot = createRootPath(initialState, "root", immutablePreset);
+    const pathRoot = path("root", initialState, immutablePreset);
     expect(pathRoot.get()).toBe(initialState);
 
     let tracking;
