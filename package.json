@@ -14,7 +14,9 @@
     "clean:cjs": "rimraf lib/",
     "clean:es": "rimraf es/",
     "rebuild:cjs": "npm run clean:cjs & npm run build:cjs",
-    "rebuild:es": "npm run clean:es & npm run build:es"
+    "rebuild:es": "npm run clean:es & npm run build:es",
+    "test": "jest",
+    "test-dev": "jest --watch"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.49",
@@ -22,7 +24,9 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.49",
     "@babel/polyfill": "^7.0.0-beta.49",
     "@babel/preset-env": "^7.0.0-beta.49",
+    "babel-jest": "^23.0.1",
     "cross-env": "^5.1.6",
+    "jest": "^23.1.0",
     "rimraf": "^2.6.2"
   },
   "repository": {
