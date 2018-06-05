@@ -24,7 +24,20 @@ const createMainCore = (key, initialState, updaterPreset) => {
   const unfreezeWatchers = () => {
     if (--nestedLevel !== 0) return;
     for (const [watchers, state] of updates) {
-      watchers.forEach(watcher => watcher(state));
+      watchers.forEach(watcher => {
+        try {
+          watcher(state);
+        } catch (e) {
+          // throw error with stack trace for `window.onerror`.
+          // But "watcher" - can be any external module (in the user code)
+          // and main `pathon` goal - is deliver state update
+          // so we wouldn't stop all work
+          const errorWithStack = new Error('Error notify "pathon" watcher');
+          setTimeout(() => {
+            throw errorWithStack;
+          });
+        }
+      });
     }
     updates.clear();
   };
@@ -59,7 +72,13 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
 
   const set = payload => {
     freezeWatchers();
-    const newState = mergeStateAndPayload(get(), payload);
+    let newState;
+    try {
+      newState = mergeStateAndPayload(get(), payload);
+    } catch (e) {
+      unfreezeWatchers();
+      throw e;
+    }
     addWatchersForUpdate(watchers, newState);
     setOwnStateToParentStateByPath(key, newState);
     unfreezeWatchers();
