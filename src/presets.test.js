@@ -1,8 +1,6 @@
-const presets = require('./presets');
+const { mutablePreset, immutablePreset } = require('./presets');
 
-const { mutablePreset, immutablePreset } = presets;
-
-describe('[preset] mutablePreset', () => {
+describe('[presets]', () => {
   it('includes all api methods', () => {
     expect(typeof mutablePreset.hasPath).toBe('function');
     expect(typeof mutablePreset.getValueByKey).toBe('function');
@@ -10,65 +8,152 @@ describe('[preset] mutablePreset', () => {
     expect(typeof mutablePreset.insertValueToStateByPath).toBe('function');
   });
 
-  describe('[method] hasPath', () => {
-    const keyTypeNull = null;
+  const presets = { mutablePreset, immutablePreset };
 
-    const keyTypeUndefined = undefined;
+  Object.keys({ mutablePreset, immutablePreset }).forEach(presetName => {
+    const preset = presets[presetName];
+    const uniqueValue = Math.random();
 
-    const keyTypeString = 'keyTypeString';
-    const keyTypeStringNotPassed = 'keyTypeStringNotPassed';
+    describe(`[preset] ${presetName} [method] hasPath`, () => {
+      const keyTypeNull = null;
 
-    const keyTypeNumber = 1;
-    const keyTypeNumberNotPassed = 2;
+      const keyTypeUndefined = undefined;
 
-    const keyTypeSymbol = Symbol('keyTypeSymbol');
-    const keyTypeSymbolNotPassed = Symbol('keyTypeSymbolNotPassed');
+      const keyTypeString = 'keyTypeString';
+      const keyTypeStringNotPassed = 'keyTypeStringNotPassed';
 
-    const keyTypeObject = {};
-    const keyTypeObjectNotPassed = {};
+      const keyTypeNumber = 1;
+      const keyTypeNumberNotPassed = 2;
 
-    const keyTypeFunction = () => {};
-    const keyTypeFunctionNotPassed = () => {};
+      const keyTypeSymbol = Symbol('keyTypeSymbol');
+      const keyTypeSymbolNotPassed = Symbol('keyTypeSymbolNotPassed');
 
-    it('[structure] Object', () => {
-      const structureObject = {};
+      const keyTypeObject = {};
+      const keyTypeObjectNotPassed = {};
 
-      structureObject[keyTypeString] = true;
-      structureObject[keyTypeSymbol] = true;
+      const keyTypeFunction = () => {};
+      const keyTypeFunctionNotPassed = () => {};
 
-      expect(mutablePreset.hasPath(structureObject, keyTypeString)).toBe(true);
-      expect(mutablePreset.hasPath(structureObject, keyTypeSymbol)).toBe(true);
+      it('[structure] Object', () => {
+        const structureObject = {};
 
-      expect(mutablePreset.hasPath(structureObject, keyTypeStringNotPassed)).toBe(false);
-      expect(mutablePreset.hasPath(structureObject, keyTypeSymbolNotPassed)).toBe(false);
-      expect(mutablePreset.hasPath(structureObject, keyTypeNull)).toBe(false);
-      expect(mutablePreset.hasPath(structureObject, keyTypeUndefined)).toBe(false);
+        structureObject[keyTypeString] = uniqueValue;
+        structureObject[keyTypeSymbol] = uniqueValue;
+
+        expect(preset.hasPath(structureObject, keyTypeString)).toBe(true);
+        expect(preset.hasPath(structureObject, keyTypeSymbol)).toBe(true);
+
+        expect(preset.hasPath(structureObject, keyTypeStringNotPassed)).toBe(false);
+        expect(preset.hasPath(structureObject, keyTypeSymbolNotPassed)).toBe(false);
+        expect(preset.hasPath(structureObject, keyTypeNull)).toBe(false);
+        expect(preset.hasPath(structureObject, keyTypeUndefined)).toBe(false);
+      });
+
+      it('[structure] Array', () => {
+        const structureArray = [uniqueValue];
+
+        expect(preset.hasPath(structureArray, 0)).toBe(true);
+
+        expect(preset.hasPath(structureArray, keyTypeNull)).toBe(false);
+        expect(preset.hasPath(structureArray, keyTypeUndefined)).toBe(false);
+      });
+
+      it('[structure] Map', () => {
+        const structureMap = new Map();
+        structureMap.set(keyTypeNull, uniqueValue);
+        structureMap.set(keyTypeUndefined, uniqueValue);
+        structureMap.set(keyTypeString, uniqueValue);
+        structureMap.set(keyTypeNumber, uniqueValue);
+        structureMap.set(keyTypeSymbol, uniqueValue);
+        structureMap.set(keyTypeObject, uniqueValue);
+        structureMap.set(keyTypeFunction, uniqueValue);
+
+        expect(preset.hasPath(structureMap, keyTypeNull)).toBe(true);
+        expect(preset.hasPath(structureMap, keyTypeUndefined)).toBe(true);
+        expect(preset.hasPath(structureMap, keyTypeString)).toBe(true);
+        expect(preset.hasPath(structureMap, keyTypeNumber)).toBe(true);
+        expect(preset.hasPath(structureMap, keyTypeSymbol)).toBe(true);
+        expect(preset.hasPath(structureMap, keyTypeObject)).toBe(true);
+        expect(preset.hasPath(structureMap, keyTypeFunction)).toBe(true);
+
+        expect(preset.hasPath(structureMap, keyTypeStringNotPassed)).toBe(false);
+        expect(preset.hasPath(structureMap, keyTypeNumberNotPassed)).toBe(false);
+        expect(preset.hasPath(structureMap, keyTypeObjectNotPassed)).toBe(false);
+        expect(preset.hasPath(structureMap, keyTypeFunctionNotPassed)).toBe(false);
+        expect(preset.hasPath(new Map(), keyTypeNull)).toBe(false);
+        expect(preset.hasPath(new Map(), keyTypeUndefined)).toBe(false);
+      });
     });
 
-    it('[structure] Map', () => {
-      const structureMap = new Map();
-      structureMap.set(keyTypeNull, true);
-      structureMap.set(keyTypeUndefined, true);
-      structureMap.set(keyTypeString, true);
-      structureMap.set(keyTypeNumber, true);
-      structureMap.set(keyTypeSymbol, true);
-      structureMap.set(keyTypeObject, true);
-      structureMap.set(keyTypeFunction, true);
+    describe(`[preset] ${presetName} [method] getValueByKey`, () => {
+      const keyTypeNull = null;
 
-      expect(mutablePreset.hasPath(structureMap, keyTypeNull)).toBe(true);
-      expect(mutablePreset.hasPath(structureMap, keyTypeUndefined)).toBe(true);
-      expect(mutablePreset.hasPath(structureMap, keyTypeString)).toBe(true);
-      expect(mutablePreset.hasPath(structureMap, keyTypeNumber)).toBe(true);
-      expect(mutablePreset.hasPath(structureMap, keyTypeSymbol)).toBe(true);
-      expect(mutablePreset.hasPath(structureMap, keyTypeObject)).toBe(true);
-      expect(mutablePreset.hasPath(structureMap, keyTypeFunction)).toBe(true);
+      const keyTypeUndefined = undefined;
 
-      expect(mutablePreset.hasPath(structureMap, keyTypeStringNotPassed)).toBe(false);
-      expect(mutablePreset.hasPath(structureMap, keyTypeNumberNotPassed)).toBe(false);
-      expect(mutablePreset.hasPath(structureMap, keyTypeObjectNotPassed)).toBe(false);
-      expect(mutablePreset.hasPath(structureMap, keyTypeFunctionNotPassed)).toBe(false);
-      expect(mutablePreset.hasPath(new Map(), keyTypeNull)).toBe(false);
-      expect(mutablePreset.hasPath(new Map(), keyTypeUndefined)).toBe(false);
+      const keyTypeString = 'keyTypeString';
+      const keyTypeStringNotPassed = 'keyTypeStringNotPassed';
+
+      const keyTypeNumber = 1;
+      const keyTypeNumberNotPassed = 2;
+
+      const keyTypeSymbol = Symbol('keyTypeSymbol');
+      const keyTypeSymbolNotPassed = Symbol('keyTypeSymbolNotPassed');
+
+      const keyTypeObject = {};
+      const keyTypeObjectNotPassed = {};
+
+      const keyTypeFunction = () => {};
+      const keyTypeFunctionNotPassed = () => {};
+
+      it('[structure] Object', () => {
+        const structureObject = {};
+
+        structureObject[keyTypeString] = uniqueValue;
+        structureObject[keyTypeSymbol] = uniqueValue;
+
+        expect(preset.getValueByKey(structureObject, keyTypeString)).toBe(uniqueValue);
+        expect(preset.getValueByKey(structureObject, keyTypeSymbol)).toBe(uniqueValue);
+
+        expect(preset.getValueByKey(structureObject, keyTypeStringNotPassed)).toBe(undefined);
+        expect(preset.getValueByKey(structureObject, keyTypeSymbolNotPassed)).toBe(undefined);
+        expect(preset.getValueByKey(structureObject, keyTypeNull)).toBe(undefined);
+        expect(preset.getValueByKey(structureObject, keyTypeUndefined)).toBe(undefined);
+      });
+
+      it('[structure] Array', () => {
+        const structureArray = [uniqueValue];
+
+        expect(preset.getValueByKey(structureArray, 0)).toBe(uniqueValue);
+
+        expect(preset.getValueByKey(structureArray, 1)).toBe(undefined);
+        expect(preset.getValueByKey(structureArray, keyTypeUndefined)).toBe(undefined);
+      });
+
+      it('[structure] Map', () => {
+        const structureMap = new Map();
+        structureMap.set(keyTypeNull, uniqueValue);
+        structureMap.set(keyTypeUndefined, uniqueValue);
+        structureMap.set(keyTypeString, uniqueValue);
+        structureMap.set(keyTypeNumber, uniqueValue);
+        structureMap.set(keyTypeSymbol, uniqueValue);
+        structureMap.set(keyTypeObject, uniqueValue);
+        structureMap.set(keyTypeFunction, uniqueValue);
+
+        expect(preset.getValueByKey(structureMap, keyTypeNull)).toBe(uniqueValue);
+        expect(preset.getValueByKey(structureMap, keyTypeUndefined)).toBe(uniqueValue);
+        expect(preset.getValueByKey(structureMap, keyTypeString)).toBe(uniqueValue);
+        expect(preset.getValueByKey(structureMap, keyTypeNumber)).toBe(uniqueValue);
+        expect(preset.getValueByKey(structureMap, keyTypeSymbol)).toBe(uniqueValue);
+        expect(preset.getValueByKey(structureMap, keyTypeObject)).toBe(uniqueValue);
+        expect(preset.getValueByKey(structureMap, keyTypeFunction)).toBe(uniqueValue);
+
+        expect(preset.getValueByKey(structureMap, keyTypeStringNotPassed)).toBe(undefined);
+        expect(preset.getValueByKey(structureMap, keyTypeNumberNotPassed)).toBe(undefined);
+        expect(preset.getValueByKey(structureMap, keyTypeObjectNotPassed)).toBe(undefined);
+        expect(preset.getValueByKey(structureMap, keyTypeFunctionNotPassed)).toBe(undefined);
+        expect(preset.getValueByKey(new Map(), keyTypeNull)).toBe(undefined);
+        expect(preset.getValueByKey(new Map(), keyTypeUndefined)).toBe(undefined);
+      });
     });
   });
 });
