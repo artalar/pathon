@@ -1,5 +1,7 @@
 const { mutablePreset, immutablePreset } = require('./presets');
 
+// TODO: `Set`
+
 describe('[presets]', () => {
   it('includes all api methods', () => {
     expect(typeof mutablePreset.hasPath).toBe('function');
@@ -154,6 +156,62 @@ describe('[presets]', () => {
         expect(preset.getValueByKey(new Map(), keyTypeNull)).toBe(undefined);
         expect(preset.getValueByKey(new Map(), keyTypeUndefined)).toBe(undefined);
       });
+    });
+  });
+
+  describe(`[preset] immutablePreset [method] mergeStateAndPayload`, () => {
+    it('[structure] Object', () => {
+      const obj1 = {};
+
+      expect(immutablePreset.mergeStateAndPayload({}, {})).toEqual({});
+      expect(immutablePreset.mergeStateAndPayload({ foo: 'bar' }, {})).toEqual({ foo: 'bar' });
+      expect(immutablePreset.mergeStateAndPayload({}, { foo: 'bar' })).toEqual({ foo: 'bar' });
+      expect(immutablePreset.mergeStateAndPayload(obj1, {}) !== obj1).toBe(true);
+      expect(immutablePreset.mergeStateAndPayload({}, obj1) !== obj1).toBe(true);
+    });
+
+    it('[structure] Array', () => {
+      const arr1 = [];
+
+      expect(immutablePreset.mergeStateAndPayload([], [])).toEqual([]);
+      expect(immutablePreset.mergeStateAndPayload([1], [])).toEqual([]);
+      expect(immutablePreset.mergeStateAndPayload([], [1])).toEqual([1]);
+      expect(immutablePreset.mergeStateAndPayload(arr1, []) !== arr1).toBe(true);
+    });
+
+    it('[structure] Map', () => {
+      const map1 = new Map([[1,2]]);
+
+      expect(immutablePreset.mergeStateAndPayload(new Map([[1,2]]), new Map())).toEqual(new Map([[1,2]]));
+      expect(immutablePreset.mergeStateAndPayload(new Map(), new Map([[1,2]]))).toEqual(new Map([[1,2]]));
+      expect(immutablePreset.mergeStateAndPayload(map1, new Map()) !== map1).toBe(true);
+      expect(immutablePreset.mergeStateAndPayload(new Map(), map1) !== map1).toBe(true);
+    });
+  });
+
+  describe(`[preset] mutablePreset [method] mergeStateAndPayload`, () => {
+    it('[structure] Object', () => {
+      const obj1 = {};
+      const obj2 = {};
+
+      expect(mutablePreset.mergeStateAndPayload(obj1, obj2)).toBe(obj2);
+      expect(mutablePreset.mergeStateAndPayload(obj2, obj1)).toBe(obj1);
+    });
+
+    it('[structure] Array', () => {
+      const arr1 = {};
+      const arr2 = {};
+
+      expect(mutablePreset.mergeStateAndPayload(arr1, arr2)).toBe(arr2);
+      expect(mutablePreset.mergeStateAndPayload(arr2, arr1)).toBe(arr1);
+    });
+
+    it('[structure] Map', () => {
+      const map1 = {};
+      const map2 = {};
+
+      expect(mutablePreset.mergeStateAndPayload(map1, map2)).toBe(map2);
+      expect(mutablePreset.mergeStateAndPayload(map2, map1)).toBe(map1);
     });
   });
 });
