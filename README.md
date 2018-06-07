@@ -32,6 +32,7 @@ const {
   set, // set value to `path`
   watch, // subscribe to updates
   unwatch, // unsubscribe
+  compose, // compose many updates (`.set`)
   path, // create new `path` - element of current value by specified key
   getPath, // get current `path` key
   getPathFull, // get array of keys from root to current `path`

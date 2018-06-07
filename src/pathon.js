@@ -121,6 +121,15 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
     getPathFull,
     watch,
     unwatch,
+    compose: callback => {
+      try {
+        freezeWatchers();
+        callback(this);
+        unfreezeWatchers();
+      } catch (e) {
+        catchError(e);
+      }
+    },
     path: (childKey, childInitialState, childUpdaterPreset = updaterPreset) => {
       if (childList.has(childKey) === true) return childList.get(childKey);
 
