@@ -24,26 +24,19 @@ const createMainCore = (key, initialState, updaterPreset) => {
   const unfreezeWatchers = () => {
     if (--nestedLevel !== 0) return;
     for (const [watchers, state] of updates) {
-      watchers.forEach(watcher => {
-        try {
-          watcher(state);
-        } catch (e) {
-          // throw error with stack trace for `window.onerror`.
-          // But "watcher" - can be any external module (in the user code)
-          // and main `pathon` goal - is deliver state update
-          // so we wouldn't stop all work
-          const errorWithStack = new Error('Error notify "pathon" watcher');
-          setTimeout(() => {
-            throw errorWithStack;
-          });
-        }
-      });
+      watchers.forEach(watcher => safeExecutor(watcher, state));
     }
     updates.clear();
   };
 
   const defaultPath = [];
   const getPath = () => defaultPath;
+
+  const catchError = error => {
+    nestedLevel = 0;
+    updates.clear();
+    throw error;
+  };
 
   return {
     get,
@@ -52,7 +45,21 @@ const createMainCore = (key, initialState, updaterPreset) => {
     freezeWatchers,
     unfreezeWatchers,
     getPath,
+    catchError,
   };
+};
+
+const safeExecutor = (f, ...args) => {
+  try {
+    return f(...args);
+  } catch (error) {
+    // Continue work
+    // but throw error with stack trace for `window.onerror`
+    const errorWithStack = new Error(error);
+    setTimeout(() => {
+      throw errorWithStack;
+    });
+  }
 };
 
 const createPath = (key, initialState = {}, updaterPreset, parent) => {
@@ -67,7 +74,9 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
   const freezeWatchers = parent.freezeWatchers;
   const unfreezeWatchers = parent.unfreezeWatchers;
   const getPathParent = parent.getPath;
+  const catchError = parent.catchError;
 
+  // TODO: cache?
   const get = () => getOwnStateFromParentStateByPath(getParentState(), key);
 
   const set = payload => {
@@ -75,20 +84,21 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
     let newState;
     try {
       newState = mergeStateAndPayload(get(), payload);
+      setOwnStateToParentStateByPath(key, newState);
     } catch (e) {
-      unfreezeWatchers();
-      throw e;
+      catchError(e);
     }
     addWatchersForUpdate(watchers, newState);
-    setOwnStateToParentStateByPath(key, newState);
     unfreezeWatchers();
   };
 
   const setChildStateToOwnStateByPath = (childKey, childState) => {
     freezeWatchers();
+
     const newState = insertValueToStateByPath(get(), childKey, childState);
-    addWatchersForUpdate(watchers, newState);
     setOwnStateToParentStateByPath(key, newState);
+    addWatchersForUpdate(watchers, newState);
+
     unfreezeWatchers();
   };
 
@@ -121,12 +131,17 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
         freezeWatchers,
         unfreezeWatchers,
         getPath: getPathFull,
+        catchError,
       });
 
       childList.set(childKey, childPath);
 
       if (childInitialState !== undefined && stateHasPath(get(), childKey) === false) {
-        setChildStateToOwnStateByPath(childKey, childInitialState);
+        try {
+          setChildStateToOwnStateByPath(childKey, childInitialState);
+        } catch (e) {
+          catchError(e);
+        }
       }
 
       return childPath;
