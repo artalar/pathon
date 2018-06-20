@@ -102,6 +102,16 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
     unfreezeWatchers();
   };
 
+  const batch = function(callback) {
+    try {
+      freezeWatchers();
+      callback(this);
+      unfreezeWatchers();
+    } catch (e) {
+      catchError(e);
+    }
+  };
+
   const getPath = () => key;
   const getPathFull = () => [...getPathParent(), key];
 
@@ -114,47 +124,41 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
 
   const childList = new Map();
 
+  const path = (childKey, childInitialState, childUpdaterPreset = updaterPreset) => {
+    if (childList.has(childKey) === true) return childList.get(childKey);
+
+    const childPath = createPath(childKey, childInitialState, childUpdaterPreset, {
+      get,
+      setChildStateToOwnStateByPath,
+      addWatchersForUpdate,
+      freezeWatchers,
+      unfreezeWatchers,
+      getPath: getPathFull,
+      catchError,
+    });
+
+    childList.set(childKey, childPath);
+
+    if (childInitialState !== undefined && stateHasPath(get(), childKey) === false) {
+      try {
+        setChildStateToOwnStateByPath(childKey, childInitialState);
+      } catch (e) {
+        catchError(e);
+      }
+    }
+
+    return childPath;
+  };
+
   return {
     get,
     set,
+    batch,
     getPath,
     getPathFull,
     watch,
     unwatch,
-    compose: callback => {
-      try {
-        freezeWatchers();
-        callback(this);
-        unfreezeWatchers();
-      } catch (e) {
-        catchError(e);
-      }
-    },
-    path: (childKey, childInitialState, childUpdaterPreset = updaterPreset) => {
-      if (childList.has(childKey) === true) return childList.get(childKey);
-
-      const childPath = createPath(childKey, childInitialState, childUpdaterPreset, {
-        get,
-        setChildStateToOwnStateByPath,
-        addWatchersForUpdate,
-        freezeWatchers,
-        unfreezeWatchers,
-        getPath: getPathFull,
-        catchError,
-      });
-
-      childList.set(childKey, childPath);
-
-      if (childInitialState !== undefined && stateHasPath(get(), childKey) === false) {
-        try {
-          setChildStateToOwnStateByPath(childKey, childInitialState);
-        } catch (e) {
-          catchError(e);
-        }
-      }
-
-      return childPath;
-    },
+    path,
   };
 };
 

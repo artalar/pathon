@@ -19,7 +19,7 @@ const mutablePreset = {
     } else if (typeof state === 'object' && state !== null) {
       return state[key];
     } else {
-      // FIXME: ?
+      // TODO: ?
       return state;
     }
   },
@@ -36,8 +36,8 @@ const mutablePreset = {
       state[key] = value;
       return state;
     } else {
-      // FIXME: ?
-      return value;
+      // TODO: ?
+      return state;
     }
   },
 };
@@ -60,7 +60,7 @@ const immutablePreset = {
     } else if (typeof state === 'object' && state !== null) {
       return state[key];
     } else {
-      // FIXME: ?
+      // TODO: ?
       return state;
     }
   },
@@ -91,10 +91,21 @@ const immutablePreset = {
     } else if (typeof state === 'object' && state !== null) {
       return { ...state, [key]: value };
     } else {
-      // FIXME: ?
-      return value;
+      // TODO: ?
+      return state;
     }
   },
 };
+
+/* 
+// For use callback for update (`.set`) you can replace `mergeStateAndPayload`
+{
+  ...mutablePreset,
+  mergeStateAndPayload(state, payload) {
+    return payload(state);
+  }
+}
+
+*/
 
 module.exports = { mutablePreset, immutablePreset };
