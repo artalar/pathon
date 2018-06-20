@@ -12,7 +12,7 @@
 
 [![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/4xv6zvlvv7)
 
-### Develop alpha
+### Develop beta
 
 [![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/6rrm677pk)
 
