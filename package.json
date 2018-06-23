@@ -16,7 +16,8 @@
     "rebuild:cjs": "npm run clean:cjs & npm run build:cjs",
     "rebuild:es": "npm run clean:es & npm run build:es",
     "test": "jest",
-    "test-dev": "jest --watch"
+    "test-dev": "jest --watch",
+    "bench": "node --expose-gc bench/bench.test.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.49",
@@ -44,5 +45,11 @@
   "bugs": {
     "url": "https://github.com/artalar/pathon/issues"
   },
-  "homepage": "https://github.com/artalar/pathon#readme"
+  "homepage": "https://github.com/artalar/pathon#readme",
+  "dependencies": {
+    "effector": "^0.17.7",
+    "immer": "^1.3.1",
+    "immutable": "^3.8.2",
+    "pretty-hrtime": "^1.0.3"
+  }
 }
