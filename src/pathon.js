@@ -1,9 +1,12 @@
 // TODO: `compose`, `.watch.map(mapper, ?comparator)` and `.watch.shape(mapper, ?comparator)`
 
-const path = (key, initialState, updaterPreset) =>
+const mutablePreset = require('./presets').mutablePreset;
+
+
+const path = (key, initialState = {}, updaterPreset = mutablePreset) =>
   createPath(
     key, //
-    initialState, //
+    initialState,
     updaterPreset, //
     createMainCore(key, initialState, updaterPreset) // parent
   );
@@ -24,6 +27,7 @@ const createMainCore = (key, initialState, updaterPreset) => {
   const unfreezeWatchers = () => {
     if (--nestedLevel !== 0) return;
     for (const [watchers, state] of updates) {
+      // TODO: replace by for
       watchers.forEach(watcher => safeExecutor(watcher, state));
     }
     updates.clear();
@@ -62,7 +66,9 @@ const safeExecutor = (f, ...args) => {
   }
 };
 
-const createPath = (key, initialState = {}, updaterPreset, parent) => {
+const createPath = (key, initialState, updaterPreset, parent) => {
+  let state = initialState;
+
   const getOwnStateFromParentStateByPath = updaterPreset.getValueByKey;
   const mergeStateAndPayload = updaterPreset.mergeStateAndPayload;
   const insertValueToStateByPath = updaterPreset.insertValueToStateByPath;
@@ -77,29 +83,24 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
   const catchError = parent.catchError;
 
   // TODO: cache?
-  const get = () => getOwnStateFromParentStateByPath(getParentState(), key);
+  const get = () => state;
 
   const set = payload => {
     freezeWatchers();
-    let newState;
     try {
-      newState = mergeStateAndPayload(get(), payload);
-      setOwnStateToParentStateByPath(key, newState);
+      state = mergeStateAndPayload(state, payload);
+      setOwnStateToParentStateByPath(key, state);
     } catch (e) {
       catchError(e);
     }
-    addWatchersForUpdate(watchers, newState);
+    addWatchersForUpdate(watchers, state);
     unfreezeWatchers();
   };
 
   const setChildStateToOwnStateByPath = (childKey, childState) => {
-    freezeWatchers();
-
-    const newState = insertValueToStateByPath(get(), childKey, childState);
-    setOwnStateToParentStateByPath(key, newState);
-    addWatchersForUpdate(watchers, newState);
-
-    unfreezeWatchers();
+    state = insertValueToStateByPath(state, childKey, childState);
+    setOwnStateToParentStateByPath(key, state);
+    addWatchersForUpdate(watchers, state);
   };
 
   const batch = function(callback) {
@@ -139,7 +140,7 @@ const createPath = (key, initialState = {}, updaterPreset, parent) => {
 
     childList.set(childKey, childPath);
 
-    if (childInitialState !== undefined && stateHasPath(get(), childKey) === false) {
+    if (childInitialState !== undefined && stateHasPath(state, childKey) === false) {
       try {
         setChildStateToOwnStateByPath(childKey, childInitialState);
       } catch (e) {
