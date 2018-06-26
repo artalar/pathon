@@ -65,8 +65,8 @@ test('effector (immutable single update)', prepared => {
 
 test('pathon (mutable single update)', prepared => {
   //$off
-  const { path, mutablePreset } = require('../src');
-  const rootPath = path('root', generateDraft(), mutablePreset);
+  const { path } = require('../src');
+  const rootPath = path('root', generateDraft());
   prepared();
 
   const newDraft = rootPath.get();
@@ -128,8 +128,8 @@ test('effector (immutable each update)', prepared => {
 
 test('pathon (mutable each update)', prepared => {
   //$off
-  const { path, mutablePreset } = require('../src');
-  const rootPath = path('root', generateDraft(), mutablePreset);
+  const { path } = require('../src');
+  const rootPath = path('root', generateDraft());
   const update = i =>
     rootPath
       .path(i)
