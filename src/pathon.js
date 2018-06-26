@@ -1,10 +1,37 @@
-// TODO: `compose`, `.watch.map(mapper, ?comparator)` and `.watch.shape(mapper, ?comparator)`
+// TODO: `.watch.map(mapper, ?comparator)` and `.watch.shape(mapper, ?comparator)`
 
-const mutablePreset = require('./presets').mutablePreset;
-
+const mutablePreset = {
+  hasPath(state, key) {
+    if (typeof state === 'object' && state !== null) {
+      return state.hasOwnProperty(key);
+    } else {
+      return false;
+    }
+  },
+  getValueByKey(state, key) {
+    if (typeof state === 'object' && state !== null) {
+      return state[key];
+    } else {
+      // TODO: ?
+      return undefined;
+    }
+  },
+  mergeStateAndPayload(state, payload) {
+    return payload;
+  },
+  insertValueToStateByPath(state, key, value) {
+    if (typeof state === 'object' && state !== null) {
+      state[key] = value;
+      return state;
+    } else {
+      // TODO: ?
+      return state;
+    }
+  },
+};
 
 const path = (key, initialState = {}, updaterPreset = mutablePreset) =>
-  createPath(
+  new Path(
     key, //
     initialState,
     updaterPreset, //
@@ -16,15 +43,15 @@ const createMainCore = (key, initialState, updaterPreset) => {
 
   const get = () => state;
 
-  const setOwnStateToParentStateByPath = (childKey, childNewState) => {
+  const __setChildStateToOwnStateByPath = (childKey, childNewState) => {
     state.set(childKey, childNewState);
   };
 
   const updates = new Map();
   let nestedLevel = 0;
-  const addWatchersForUpdate = (watchers, state) => void updates.set(watchers, state);
-  const freezeWatchers = () => void ++nestedLevel;
-  const unfreezeWatchers = () => {
+  const __addWatchersForUpdate = (watchers, state) => void updates.set(watchers, state);
+  const __freezeWatchers = () => void ++nestedLevel;
+  const __unfreezeWatchers = () => {
     if (--nestedLevel !== 0) return;
     for (const [watchers, state] of updates) {
       // TODO: replace by for
@@ -36,20 +63,19 @@ const createMainCore = (key, initialState, updaterPreset) => {
   const defaultPath = [];
   const getPath = () => defaultPath;
 
-  const catchError = error => {
+  const __catchError = error => {
     nestedLevel = 0;
     updates.clear();
     throw error;
   };
 
   return {
-    get,
-    setChildStateToOwnStateByPath: setOwnStateToParentStateByPath,
-    addWatchersForUpdate,
-    freezeWatchers,
-    unfreezeWatchers,
+    __setChildStateToOwnStateByPath,
+    __addWatchersForUpdate,
+    __freezeWatchers,
+    __unfreezeWatchers,
     getPath,
-    catchError,
+    __catchError,
   };
 };
 
@@ -66,101 +92,100 @@ const safeExecutor = (f, ...args) => {
   }
 };
 
-const createPath = (key, initialState, updaterPreset, parent) => {
-  let state = initialState;
+class PathSystem {
+  constructor(key, initialState, updaterPreset, parent) {
+    this.__key = key;
+    this.__state = initialState;
+    this.__updaterPreset = updaterPreset;
+    this.__parent = parent;
 
-  const getOwnStateFromParentStateByPath = updaterPreset.getValueByKey;
-  const mergeStateAndPayload = updaterPreset.mergeStateAndPayload;
-  const insertValueToStateByPath = updaterPreset.insertValueToStateByPath;
-  const stateHasPath = updaterPreset.hasPath;
+    this.__watchers = new Set();
+    this.__childList = new Map();
 
-  const getParentState = parent.get;
-  const setOwnStateToParentStateByPath = parent.setChildStateToOwnStateByPath;
-  const addWatchersForUpdate = parent.addWatchersForUpdate;
-  const freezeWatchers = parent.freezeWatchers;
-  const unfreezeWatchers = parent.unfreezeWatchers;
-  const getPathParent = parent.getPath;
-  const catchError = parent.catchError;
+    this.__freezeWatchers = parent.__freezeWatchers;
+    this.__unfreezeWatchers = parent.__unfreezeWatchers;
+    this.__addWatchersForUpdate = parent.__addWatchersForUpdate;
+    this.__catchError = parent.__catchError;
+  }
 
-  // TODO: cache?
-  const get = () => state;
+  __setChildStateToOwnStateByPath(childKey, childState) {
+    const newState = this.__updaterPreset.insertValueToStateByPath(
+      this.__state,
+      childKey,
+      childState
+    );
+    this.__parent.__setChildStateToOwnStateByPath(this.__key, newState);
+    this.__state = newState;
+    this.__parent.__addWatchersForUpdate(this.__watchers, this.__state);
+  }
+}
 
-  const set = payload => {
-    freezeWatchers();
+class Path extends PathSystem {
+  get() {
+    return this.__state;
+  }
+
+  set(payload) {
+    this.__freezeWatchers();
     try {
-      state = mergeStateAndPayload(state, payload);
-      setOwnStateToParentStateByPath(key, state);
+      const newState = this.__updaterPreset.mergeStateAndPayload(this.__state, payload);
+      this.__parent.__setChildStateToOwnStateByPath(this.__key, newState);
+      this.__state = newState;
     } catch (e) {
-      catchError(e);
+      this.__catchError(e);
     }
-    addWatchersForUpdate(watchers, state);
-    unfreezeWatchers();
-  };
+    this.__addWatchersForUpdate(this.__watchers, this.__state);
+    this.__unfreezeWatchers();
+  }
 
-  const setChildStateToOwnStateByPath = (childKey, childState) => {
-    state = insertValueToStateByPath(state, childKey, childState);
-    setOwnStateToParentStateByPath(key, state);
-    addWatchersForUpdate(watchers, state);
-  };
-
-  const batch = function(callback) {
+  batch(callback) {
     try {
-      freezeWatchers();
+      this.__parent.freezeWatchers();
       callback(this);
-      unfreezeWatchers();
+      this.__parent.unfreezeWatchers();
     } catch (e) {
-      catchError(e);
+      this.__parent.__catchError(e);
     }
-  };
+  }
 
-  const getPath = () => key;
-  const getPathFull = () => [...getPathParent(), key];
+  getPath() {
+    return this.__key;
+  }
 
-  const watchers = new Set();
-  const watch = callback => {
-    watchers.add(callback);
-    return /* or `get()` ? */ () => watchers.delete(callback);
-  };
-  const unwatch = callback => watchers.delete(callback);
+  getPathFull() {
+    return this.__parent.getPath().concat([this.__key]);
+  }
 
-  const childList = new Map();
+  watch(callback) {
+    this.__watchers.add(callback);
+    return /* or `get()` ? */ () => this.unwatch(callback);
+  }
 
-  const path = (childKey, childInitialState, childUpdaterPreset = updaterPreset) => {
-    if (childList.has(childKey) === true) return childList.get(childKey);
+  unwatch(callback) {
+    return this.__watchers.delete(callback);
+  }
 
-    const childPath = createPath(childKey, childInitialState, childUpdaterPreset, {
-      get,
-      setChildStateToOwnStateByPath,
-      addWatchersForUpdate,
-      freezeWatchers,
-      unfreezeWatchers,
-      getPath: getPathFull,
-      catchError,
-    });
+  path(childKey, childInitialState, childUpdaterPreset = this.__updaterPreset) {
+    const { __childList } = this;
 
-    childList.set(childKey, childPath);
+    if (__childList.has(childKey) === true) return __childList.get(childKey);
 
-    if (childInitialState !== undefined && stateHasPath(state, childKey) === false) {
+    const childPath = new Path(childKey, childInitialState, childUpdaterPreset, this);
+
+    __childList.set(childKey, childPath);
+
+    if (childInitialState !== undefined && this.__stateHasPath(this.__state, childKey) === false) {
       try {
-        setChildStateToOwnStateByPath(childKey, childInitialState);
+        this.__freezeWatchers();
+        this.__setChildStateToOwnStateByPath(childKey, childInitialState);
+        this.__unfreezeWatchers();
       } catch (e) {
-        catchError(e);
+        this.__catchError(e);
       }
     }
 
     return childPath;
-  };
-
-  return {
-    get,
-    set,
-    batch,
-    getPath,
-    getPathFull,
-    watch,
-    unwatch,
-    path,
-  };
-};
+  }
+}
 
 module.exports.path = path;
