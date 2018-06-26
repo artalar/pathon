@@ -31,13 +31,21 @@ describe('pathon', () => {
     let subscriptionToRoot = false;
     let subscriptionToChild = false;
 
-    pathRoot.watch(state => (subscriptionToRoot = state.child));
+    const unwatchRoot = pathRoot.watch(state => (subscriptionToRoot = state.child));
     pathRoot.path('child').watch(state => subscriptionToChild = state);
 
     pathRoot.path('child').set(true);
 
     expect(subscriptionToRoot).toBe(true);
     expect(subscriptionToChild).toBe(true);
+
+    // unsubscribe
+    unwatchRoot();
+    pathRoot.path('child').set(1);
+
+    expect(subscriptionToRoot).toBe(true);
+    expect(subscriptionToChild).toBe(1);
+
   });
   it('root path state', () => {
     const initialState = {};
