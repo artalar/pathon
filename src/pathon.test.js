@@ -23,40 +23,38 @@ describe('pathon', () => {
     expect(typeof pathChild.path).toBe('function');
   });
 
-  describe('set', () => {
-    it('get', () => {
-      const pathRoot = path('root', { count: 1 });
+  it('get', () => {
+    const pathRoot = path('root', { count: 1 });
 
-      expect(pathRoot.path('count').get()).toBe(1);
-    });
+    expect(pathRoot.path('count').get()).toBe(1);
+  });
 
-    it('set', () => {
-      /*  */
-    });
+  it('set', () => {
+    /*  */
+  });
 
-    it('set and update children', () => {
-      const pathRoot = path('root', { counter1: 0, counter2: 0, counterDeep: { counter: 0 } });
-      const pathCounter1 = pathRoot.path('counter1');
-      const pathCounter2 = pathRoot.path('counter2');
-      const pathCounterDeepCounter = pathRoot.path('counterDeep').path('counter');
+  it('set and update children', () => {
+    const pathRoot = path('root', { counter1: 0, counter2: 0, counterDeep: { counter: 0 } });
+    const pathCounter1 = pathRoot.path('counter1');
+    const pathCounter2 = pathRoot.path('counter2');
+    const pathCounterDeepCounter = pathRoot.path('counterDeep').path('counter');
 
-      let trackingCounter1 = false;
-      let trackingCounter2 = false;
-      let trackingCounterDeepCounter = false;
+    let trackingCounter1 = false;
+    let trackingCounter2 = false;
+    let trackingCounterDeepCounter = false;
 
-      pathCounter1.watch(() => (trackingCounter1 = true));
-      pathCounter2.watch(() => (trackingCounter2 = true));
-      pathCounterDeepCounter.watch(() => (trackingCounterDeepCounter = true));
+    pathCounter1.watch(() => (trackingCounter1 = true));
+    pathCounter2.watch(() => (trackingCounter2 = true));
+    pathCounterDeepCounter.watch(() => (trackingCounterDeepCounter = true));
 
-      pathRoot.set({ counter1: 1 });
-      pathRoot.set({ counterDeep: { counter: 1 } });
+    pathRoot.set({ counter1: 1 });
+    pathRoot.set({ counterDeep: { counter: 1 } });
 
-      expect(pathCounter1.get()).toBe(1);
-      expect(trackingCounter1).toBe(true);
-      expect(trackingCounter2).toBe(false);
-      expect(trackingCounterDeepCounter).toBe(true);
-      expect(pathCounterDeepCounter.get()).toBe(1);
-    });
+    expect(pathCounter1.get()).toBe(1);
+    expect(trackingCounter1).toBe(true);
+    expect(trackingCounter2).toBe(false);
+    expect(trackingCounterDeepCounter).toBe(true);
+    expect(pathCounterDeepCounter.get()).toBe(1);
   });
 
   it('memorized child', () => {
