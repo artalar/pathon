@@ -79,15 +79,23 @@ const normalizedReducer = (initNormalizedState) => (state = { ...initNormalizedS
       case 'add':
           return {
               ...state,
-              news: { ...state.news, [action.payload.id]: action.payload },
+              news: { ...state.news, [action.payload.id]: action.payload.text },
               show: [...state.show, action.payload.id]
           };
+        case 'mod':
+            return {
+                ...state,
+                news: {
+                    ...state.news,
+                    [action.payload.id]: { ...state.news[action.payload.id], text: action.payload.text }
+                },
+            };
       case 'delete':
-          const { [action.payload]: _, ...newNews } = state.news;
+          const { [action.payload.id]: _, ...newNews } = state.news;
           return {
               ...state,
               news: newNews,
-              show: state.show.filter(id => id !== action.payload)
+              show: state.show.filter(id => id !== action.payload.id)
           };
       default:
           return state;
