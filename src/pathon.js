@@ -1,4 +1,4 @@
-// TODO: `.watch.map(mapper, ?comparator)` and `.watch.shape(mapper, ?comparator)`
+// @flow
 
 const mutablePreset = {
   hasPath(state, key) {
@@ -53,9 +53,8 @@ const createMainCore = (key, initialState, updaterPreset) => {
   const __freezeWatchers = () => void ++nestedLevel;
   const __unfreezeWatchers = () => {
     if (--nestedLevel !== 0) return;
-    for (const [watchers, state] of updates) {
-      // TODO: replace by for
-      watchers.forEach(watcher => safeExecutor(watcher, state));
+    for (let [watchers, state] of updates) {
+      for (watcher of watchers) watcher(state);
     }
     updates.clear();
   };
