@@ -46,19 +46,6 @@ describe('pathon', () => {
     expect(subscriptionToRoot).toBe(true);
     expect(subscriptionToChild).toBe(1);
   });
-  it('root path state', () => {
-    const initialState = {};
-    const pathRoot = path('root', initialState, immutablePreset);
-    expect(pathRoot.get()).toBe(initialState);
-
-    let tracking;
-    const watcher = newState => (tracking = newState);
-    const deepField = {};
-    pathRoot.watch(watcher);
-    pathRoot.set({ deepField });
-    expect(pathRoot.get()).toBe(tracking);
-    expect(pathRoot.get().deepField).toBe(deepField);
-  });
   it('batch', () => {
     const pathRoot = path('root', { counter: 0 });
     const counter = pathRoot.path('counter');
@@ -79,10 +66,47 @@ describe('pathon', () => {
     expect(tracksCounter).toBe(1);
     expect(counter.get()).toBe(iterations);
   });
+  // TODO: rewrite
+  it('root path state', () => {
+    const initialState = {};
+    const pathRoot = path('root', initialState, immutablePreset);
+    expect(pathRoot.get()).toBe(initialState);
+
+    let tracking;
+    const watcher = newState => (tracking = newState);
+    const deepField = {};
+    pathRoot.watch(watcher);
+    pathRoot.set({ deepField });
+    expect(pathRoot.get()).toBe(tracking);
+    expect(pathRoot.get().deepField).toBe(deepField);
+  });
 
   describe('set', () => {
     it('set', () => {
       /*  */
+    });
+    it('set and update children', () => {
+      const pathRoot = path('root', { counter1: 0, counter2: 0, counterDeep: { counter: 0 } });
+      const pathCounter1 = pathRoot.path('counter1');
+      const pathCounter2 = pathRoot.path('counter2');
+      const pathCounterDeepCounter = pathRoot.path('counterDeep').path('counter');
+
+      let trackingCounter1 = false;
+      let trackingCounter2 = false;
+      let trackingCounterDeepCounter = false;
+
+      pathCounter1.watch(() => (trackingCounter1 = true));
+      pathCounter2.watch(() => (trackingCounter2 = true));
+      pathCounterDeepCounter.watch(() => (trackingCounterDeepCounter = true));
+
+      pathRoot.set({ counter1: 1 });
+      pathRoot.set({ counterDeep: { counter: 1 } });
+
+      expect(pathCounter1.get()).toBe(1);
+      expect(trackingCounter1).toBe(true);
+      expect(trackingCounter2).toBe(false);
+      expect(trackingCounterDeepCounter).toBe(true);
+      expect(pathCounterDeepCounter.get()).toBe(1);
     });
     it('get', () => {
       /*  */

@@ -99,8 +99,9 @@ class PathSystem {
     this.__updaterPreset = updaterPreset;
     this.__parent = parent;
 
+    this.__ignoreSetFromChildLevel = 0;
     this.__watchers = new Set();
-    this.__childList = new Map();
+    this.__children = new Map();
 
     this.__freezeWatchers = parent.__freezeWatchers;
     this.__unfreezeWatchers = parent.__unfreezeWatchers;
@@ -109,6 +110,8 @@ class PathSystem {
   }
 
   __setChildStateToOwnStateByPath(childKey, childState) {
+    if (this.__ignoreSetFromChildLevel !== 0) return;
+
     const newState = this.__updaterPreset.insertValueToStateByPath(
       this.__state,
       childKey,
@@ -128,10 +131,29 @@ class Path extends PathSystem {
   set(payload) {
     this.__freezeWatchers();
     try {
+
+      if (this.__children.size !== 0 && typeof payload === 'object' && payload !== null) {
+        this.__ignoreSetFromChildLevel++;
+        const childrenWithPath = this.__children;
+        const newChildren = Object.entries(payload);
+
+        // need to update only overlapped children
+        const smallerList =
+          childrenWithPath.size < newChildren.length
+            ? childrenWithPath.entries() //
+            : newChildren;
+
+        for (let [key, value] of smallerList) {
+          childrenWithPath.get(key).set(value);
+        }
+
+        this.__ignoreSetFromChildLevel--;
+      }
       const newState = this.__updaterPreset.mergeStateAndPayload(this.__state, payload);
       this.__parent.__setChildStateToOwnStateByPath(this.__key, newState);
       this.__state = newState;
     } catch (e) {
+      this.__ignoreSetFromChildLevel--;
       this.__catchError(e);
     }
     this.__addWatchersForUpdate(this.__watchers, this.__state);
@@ -140,11 +162,15 @@ class Path extends PathSystem {
 
   batch(callback) {
     try {
-      this.__parent.freezeWatchers();
+      this.__freezeWatchers();
+      this.__ignoreSetFromChildLevel++;
       callback(this);
-      this.__parent.unfreezeWatchers();
+      this.__ignoreSetFromChildLevel--;
+      this.__parent.__setChildStateToOwnStateByPath(this.__key, this.__state);
+      this.__unfreezeWatchers();
     } catch (e) {
-      this.__parent.__catchError(e);
+      this.__ignoreSetFromChildLevel--;
+      this.__catchError(e);
     }
   }
 
@@ -166,13 +192,13 @@ class Path extends PathSystem {
   }
 
   path(childKey, childInitialState, childUpdaterPreset = this.__updaterPreset) {
-    const { __childList } = this;
+    const { __children } = this;
 
-    if (__childList.has(childKey) === true) return __childList.get(childKey);
+    if (__children.has(childKey) === true) return __children.get(childKey);
 
     const childPath = new Path(childKey, childInitialState, childUpdaterPreset, this);
 
-    __childList.set(childKey, childPath);
+    __children.set(childKey, childPath);
 
     if (childInitialState !== undefined && this.__stateHasPath(this.__state, childKey) === false) {
       try {
