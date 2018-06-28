@@ -23,10 +23,12 @@ describe('pathon', () => {
     expect(typeof pathChild.path).toBe('function');
   });
 
-  it('get', () => {
-    const pathRoot = path('root', { count: 1 });
+  it('get initial state', () => {
+    const initialState = { count: 1 };
+    const pathRoot = path('root', initialState);
 
-    expect(pathRoot.path('count').get()).toBe(1);
+    expect(pathRoot.get()).toBe(initialState);
+    expect(pathRoot.path('count').get()).toBe(initialState.count);
   });
 
   it('set', () => {
