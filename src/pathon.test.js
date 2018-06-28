@@ -32,7 +32,7 @@ describe('pathon', () => {
     let subscriptionToChild = false;
 
     const unwatchRoot = pathRoot.watch(state => (subscriptionToRoot = state.child));
-    pathRoot.path('child').watch(state => subscriptionToChild = state);
+    pathRoot.path('child').watch(state => (subscriptionToChild = state));
 
     pathRoot.path('child').set(true);
 
@@ -45,7 +45,6 @@ describe('pathon', () => {
 
     expect(subscriptionToRoot).toBe(true);
     expect(subscriptionToChild).toBe(1);
-
   });
   it('root path state', () => {
     const initialState = {};
@@ -59,6 +58,26 @@ describe('pathon', () => {
     pathRoot.set({ deepField });
     expect(pathRoot.get()).toBe(tracking);
     expect(pathRoot.get().deepField).toBe(deepField);
+  });
+  it('batch', () => {
+    const pathRoot = path('root', { counter: 0 });
+    const counter = pathRoot.path('counter');
+    const increment = () => counter.set(counter.get() + 1);
+    const iterations = 5;
+    let tracksRoot = 0;
+    let tracksCounter = 0;
+    pathRoot.watch(() => tracksRoot++);
+    counter.watch(() => tracksCounter++);
+
+    counter.batch(path => {
+      for (let i = 1; i <= iterations; ++i) {
+        path.set(i);
+      }
+    });
+
+    expect(tracksRoot).toBe(1);
+    expect(tracksCounter).toBe(1);
+    expect(counter.get()).toBe(iterations);
   });
 
   describe('set', () => {
