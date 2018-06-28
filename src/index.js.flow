@@ -1,3 +1,5 @@
+//@flow
+
 export type Unsubscribe = () => void
 declare export class Path<T> {
   set(value: T): void,
