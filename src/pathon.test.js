@@ -1,5 +1,7 @@
-const path = require('./pathon').path;
-const immutablePreset = require('./presets').immutablePreset;
+// @flow
+
+const path = require('./index').path;
+const immutablePreset = require('./index').immutablePreset;
 
 describe('pathon', () => {
   it('methods', () => {
@@ -66,22 +68,25 @@ describe('pathon', () => {
 
   it('subscriptions', () => {
     const pathRoot = path('root', { child: false });
-    let subscriptionToRoot = false;
+    let subscriptionToRoot1 = false;
+    let subscriptionToRoot2 = false;
     let subscriptionToChild = false;
 
-    const unwatchRoot = pathRoot.watch(state => (subscriptionToRoot = state.child));
+    const unwatchRoot1 = pathRoot.watch(state => (subscriptionToRoot1 = state.child));
+    pathRoot.watch(state => (subscriptionToRoot2 = state.child));
     pathRoot.path('child').watch(state => (subscriptionToChild = state));
 
     pathRoot.path('child').set(true);
 
-    expect(subscriptionToRoot).toBe(true);
+    expect(subscriptionToRoot1).toBe(true);
+    expect(subscriptionToRoot2).toBe(true);
     expect(subscriptionToChild).toBe(true);
 
     // unsubscribe
-    unwatchRoot();
+    unwatchRoot1();
     pathRoot.path('child').set(1);
 
-    expect(subscriptionToRoot).toBe(true);
+    expect(subscriptionToRoot1).toBe(true);
     expect(subscriptionToChild).toBe(1);
   });
 
