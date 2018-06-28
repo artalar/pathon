@@ -1,5 +1,7 @@
-const path = require('./pathon').path;
-const immutablePreset = require('./presets').immutablePreset;
+// @flow
+
+const path = require('./index').path;
+const immutablePreset = require('./index').immutablePreset;
 
 describe('pathon', () => {
   it('methods', () => {
@@ -22,31 +24,94 @@ describe('pathon', () => {
     expect(typeof pathChild.getPathFull).toBe('function');
     expect(typeof pathChild.path).toBe('function');
   });
+
+  it('get initial state', () => {
+    const initialState = { count: 1 };
+    const pathRoot = path('root', initialState);
+
+    expect(pathRoot.get()).toBe(initialState);
+    expect(pathRoot.path('count').get()).toBe(initialState.count);
+  });
+
+  it('set', () => {
+    /*  */
+  });
+
+  it('set and update children', () => {
+    const pathRoot = path('root', { counter1: 0, counter2: 0, counterDeep: { counter: 0 } });
+    const pathCounter1 = pathRoot.path('counter1');
+    const pathCounter2 = pathRoot.path('counter2');
+    const pathCounterDeepCounter = pathRoot.path('counterDeep').path('counter');
+
+    let trackingCounter1 = false;
+    let trackingCounter2 = false;
+    let trackingCounterDeepCounter = false;
+
+    pathCounter1.watch(() => (trackingCounter1 = true));
+    pathCounter2.watch(() => (trackingCounter2 = true));
+    pathCounterDeepCounter.watch(() => (trackingCounterDeepCounter = true));
+
+    pathRoot.set({ counter1: 1 });
+    pathRoot.set({ counterDeep: { counter: 1 } });
+
+    expect(pathCounter1.get()).toBe(1);
+    expect(trackingCounter1).toBe(true);
+    expect(trackingCounter2).toBe(false);
+    expect(trackingCounterDeepCounter).toBe(true);
+    expect(pathCounterDeepCounter.get()).toBe(1);
+  });
+
   it('memorized child', () => {
     const pathRoot = path('root', { child: true });
     expect(pathRoot.path('child')).toBe(pathRoot.path('child'));
   });
+
   it('subscriptions', () => {
     const pathRoot = path('root', { child: false });
-    let subscriptionToRoot = false;
+    let subscriptionToRoot1 = false;
+    let subscriptionToRoot2 = false;
     let subscriptionToChild = false;
 
-    const unwatchRoot = pathRoot.watch(state => (subscriptionToRoot = state.child));
-    pathRoot.path('child').watch(state => subscriptionToChild = state);
+    const unwatchRoot1 = pathRoot.watch(state => (subscriptionToRoot1 = state.child));
+    pathRoot.watch(state => (subscriptionToRoot2 = state.child));
+    pathRoot.path('child').watch(state => (subscriptionToChild = state));
 
     pathRoot.path('child').set(true);
 
-    expect(subscriptionToRoot).toBe(true);
+    expect(subscriptionToRoot1).toBe(true);
+    expect(subscriptionToRoot2).toBe(true);
     expect(subscriptionToChild).toBe(true);
 
     // unsubscribe
-    unwatchRoot();
+    unwatchRoot1();
     pathRoot.path('child').set(1);
 
-    expect(subscriptionToRoot).toBe(true);
+    expect(subscriptionToRoot1).toBe(true);
     expect(subscriptionToChild).toBe(1);
-
   });
+
+  it('batch', () => {
+    const pathRoot = path('root', { counter: 0 });
+    const counter = pathRoot.path('counter');
+    const increment = () => counter.set(counter.get() + 1);
+    const iterations = 5;
+    let tracksRoot = 0;
+    let tracksCounter = 0;
+    pathRoot.watch(() => tracksRoot++);
+    counter.watch(() => tracksCounter++);
+
+    counter.batch(path => {
+      for (let i = 1; i <= iterations; ++i) {
+        path.set(i);
+      }
+    });
+
+    expect(tracksRoot).toBe(1);
+    expect(tracksCounter).toBe(1);
+    expect(counter.get()).toBe(iterations);
+  });
+
+  // TODO: rewrite
   it('root path state', () => {
     const initialState = {};
     const pathRoot = path('root', initialState, immutablePreset);
@@ -59,15 +124,5 @@ describe('pathon', () => {
     pathRoot.set({ deepField });
     expect(pathRoot.get()).toBe(tracking);
     expect(pathRoot.get().deepField).toBe(deepField);
-  });
-
-  describe('set', () => {
-    it('set', () => {
-      /*  */
-    });
-    it('get', () => {
-      /*  */
-    });
-    // ...
   });
 });
