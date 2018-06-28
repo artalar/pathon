@@ -95,9 +95,12 @@ const safeExecutor = (f, ...args) => {
 class PathSystem {
   constructor(key, initialState, updaterPreset, parent) {
     this.__key = key;
-    this.__state = initialState;
     this.__updaterPreset = updaterPreset;
     this.__parent = parent;
+    this.__state =
+      initialState !== undefined //
+        ? initialState
+        : updaterPreset.getValueByKey(parent.get(), key);
 
     this.__ignoreSetFromChildLevel = 0;
     this.__watchers = new Set();
@@ -131,7 +134,6 @@ class Path extends PathSystem {
   set(payload) {
     this.__freezeWatchers();
     try {
-
       if (this.__children.size !== 0 && typeof payload === 'object' && payload !== null) {
         this.__ignoreSetFromChildLevel++;
         const childrenWithPath = this.__children;
