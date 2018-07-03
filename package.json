@@ -1,6 +1,6 @@
 {
   "name": "pathon",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "fast lens-like state manager",
   "typings": "index.d.ts",
   "main": "lib/index.js",
@@ -8,9 +8,9 @@
   "scripts": {
     "prepublishOnly": "npm run rebuild:es && npm run rebuild:cjs",
     "postpublish": "npm run clean",
-    "build": "npm run build:cjs && npm run build:es",
+    "build": "npm run clean && npm run build:cjs && npm run build:es && npm run test",
     "build:cjs": "cross-env BABEL_ENV=commonjs babel src/ -d lib -s && cp src/index.js.flow lib/index.js.flow",
-    "build:es": "babel src/ -d es -s && cp src/index.js.flow es/index.js.flow ",
+    "build:es": "babel src/ -d es -s && cp src/index.js.flow es/index.js.flow",
     "clean": "npm run clean:es && npm run clean:cjs",
     "clean:cjs": "rimraf lib/",
     "clean:es": "rimraf es/",
