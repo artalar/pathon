@@ -23,7 +23,7 @@ const deepState = {
 const deepCount = 100;
 const normalizedCount = 50;
 
-const iterations = 10;
+const iterations = 100;
 
 set('iterations', iterations);
 
@@ -129,8 +129,8 @@ suite('redux', function() {
   });
 }); // FIXME: build version
 
-/* pathon */ suite('immutable pathon from ../src', function() {
-  const { path, immutablePreset, mutablePreset } = require('../src');
+/* pathon */ suite('immutable pathon from ../es', function() {
+  const { path, immutablePreset, mutablePreset } = require('../es');
 
   bench('create deep counter', function() {
     const deepExamplePath = path('deep-example', { ...deepState }, immutablePreset);
@@ -237,113 +237,3 @@ suite('redux', function() {
     }
   });
 });
-
-/* suite('mutable pathon from ../src', function() {
-  const { path, immutablePreset, mutablePreset } = require('../src');
-
-  bench('create deep counter', function() {
-    const deepExamplePath = path('deep-example', { ...deepState });
-
-    const counterPath = deepExamplePath
-      .path('scope0')
-      .path('scope1')
-      .path('scope2')
-      .path('scope3')
-      .path('scope4')
-      .path('counter');
-    const increment = () => {
-      counterPath.set(counterPath.get() + 1);
-    };
-    const decrement = () => {
-      counterPath.set(counterPath.get() - 1);
-    };
-    deepExamplePath.watch(() => {});
-  });
-
-  const deepExamplePath = path('deep-example', { ...deepState });
-
-  const counterPath = deepExamplePath
-    .path('scope0')
-    .path('scope1')
-    .path('scope2')
-    .path('scope3')
-    .path('scope4')
-    .path('counter');
-  const increment = () => {
-    counterPath.set(counterPath.get() + 1);
-  };
-  const decrement = () => {
-    counterPath.set(counterPath.get() - 1);
-  };
-  deepExamplePath.watch(state => state);
-  bench('deep counter', function() {
-    increment();
-    decrement();
-    deepExamplePath.get();
-  });
-
-  //
-
-  bench('create normalized', function() {
-    const newsExamplePath = path('news-example', { ...initNormalizedState });
-    const pNews = newsExamplePath.path('news');
-    const pShow = newsExamplePath.path('show');
-
-    const add = news =>
-      newsExamplePath.batch(p => {
-        pNews.path(news.id).set(news);
-        pShow.path(pShow.get().length, news.id);
-      });
-
-    const mod = id =>
-      pNews
-        .path(id)
-        .path('text')
-        .set(Math.random().toString());
-
-    const del = id => {
-      const state = newsExamplePath.get();
-      const news = pNews.get();
-      delete news[id];
-      pNews.set(news);
-      pShow.set(pShow.get().filter(element => element !== id));
-    };
-  });
-
-  const newsExamplePath = path('news-example', { ...initNormalizedState });
-  const pNews = newsExamplePath.path('news');
-  const pShow = newsExamplePath.path('show');
-
-  const add = news =>
-    newsExamplePath.batch(p => {
-      console.log(news, pNews.path(news.id).get())
-      pNews.path(news.id).set(news);
-      pShow.path(pShow.get().length, news.id);
-    });
-
-  const mod = news =>
-    pNews
-      .path(news.id)
-      .path('text')
-      .set(news.text);
-
-  const del = id => {
-    const state = newsExamplePath.get();
-    const { [id]: _, ...news } = pNews.get();
-    pNews.set(news);
-    pShow.set(pShow.get().filter(element => element !== id));
-  };
-
-  bench('normalized', function() {
-    for (let i = 0; i < normalizedCount; i++) {
-      add({ id: i, text: 'some news text' + i });
-      pShow.path(i).watch(() => {});
-    }
-    for (let i = 0; i < normalizedCount * 10; i++) {
-      mod({ id: 1, text: Math.random().toString() });
-    }
-    for (let i = normalizedCount - 1; i >= 0; i--) {
-      del(i);
-    }
-  });
-}); */
