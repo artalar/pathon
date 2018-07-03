@@ -5,7 +5,7 @@ module.exports = {
       {
         targets: {
           browsers: [
-            process.env.BABEL_ENV === "commonjs" /* tmp -> */ && false
+            process.env.BABEL_ENV === "commonjs"
               ? "ie 11"
               : "last 2 Chrome versions"
           ]

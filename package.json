@@ -1,6 +1,6 @@
 {
   "name": "pathon",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "fast lens-like state manager",
   "typings": "index.d.ts",
   "main": "lib/index.js",

@@ -72,7 +72,7 @@ const immutablePreset = {
     } else if (Array.isArray(state)) {
       return payload; // ?
     } else if (typeof state === 'object' && state !== null) {
-      return { ...state, ...payload };
+      return Object.assign(state, payload);
     } else {
       return payload;
     }
@@ -89,7 +89,7 @@ const immutablePreset = {
       newState[key] = value;
       return newState;
     } else if (typeof state === 'object' && state !== null) {
-      return { ...state, [key]: value };
+      return Object.assign(state, { [key]: value });
     } else {
       // TODO: ?
       return state;
