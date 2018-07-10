@@ -23,6 +23,9 @@ describe('pathon', () => {
     expect(typeof pathChild.path).toBe('function');
   });
 
+  // TODO: reset
+  // TODO: delete
+
   const testsGet = preset => () => {
     test('root default', () => {
       const pRoot = path('root', undefined, preset);
@@ -183,15 +186,15 @@ describe('pathon', () => {
   };
 
   const testBatch = preset => () => {
-    test('literal', () => {
+    test('batch', () => {
+      const iterations = 5;
+      const subscriptionToRoot = jest.fn();
+      const subscriptionToСounter = jest.fn();
       const pathRoot = path('root', { counter: 0 }, preset);
       const counter = pathRoot.path('counter');
-      const increment = () => counter.set(counter.get() + 1);
-      const iterations = 5;
-      let tracksRoot = 0;
-      let tracksCounter = 0;
-      pathRoot.watch(() => tracksRoot++);
-      counter.watch(() => tracksCounter++);
+
+      pathRoot.watch(subscriptionToRoot);
+      counter.watch(subscriptionToСounter);
 
       counter.batch(path => {
         for (let i = 1; i <= iterations; ++i) {
@@ -199,8 +202,8 @@ describe('pathon', () => {
         }
       });
 
-      expect(tracksRoot).toBe(1);
-      expect(tracksCounter).toBe(1);
+      expect(subscriptionToRoot.mock.calls.length).toBe(1);
+      expect(subscriptionToСounter.mock.calls.length).toBe(1);
       expect(counter.get()).toBe(iterations);
     });
   };
@@ -228,7 +231,7 @@ describe('pathon', () => {
     test('watch only touched path`s', () => {
       expect(subscriptionToChild1.mock.calls.length).toBe(1);
       expect(subscriptionToChild2.mock.calls.length).toBe(0);
-    })
+    });
 
     test('unwatch', () => {
       unwatchSubscriptionToRootRepeat();
@@ -241,7 +244,7 @@ describe('pathon', () => {
     test('watch only touched path`s', () => {
       expect(subscriptionToChild1.mock.calls.length).toBe(1);
       expect(subscriptionToChild2.mock.calls.length).toBe(1);
-    })
+    });
   };
 
   describe('immutablePreset', () => {
