@@ -14,10 +14,22 @@
 >
 > [![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/6rrm677pk)
 
+# Instalation
+
+```
+npm install --save pathon
+```
+
+Or
+
+```
+yarn add pathon
+```
+
 # API
 
 ```javascript
-import { path, immutablePreset } from './pathon';
+import { path, immutablePreset } from 'pathon';
 
 const pathRoot = path('root', { count: [1, 1, 1], individualCount: 1 }, immutablePreset);
 
@@ -40,9 +52,12 @@ If you will update inner [property] `path` - all parent `path`'s watchers will b
 
 Except `immutablePreset` you can use any preset for any data-structure. Anyway you can choose not to specify a preset - by default accepted structure will update by mutations.
 
+> Look at the [examples](#example) for detailed reference
+
 # TODO
 
-> Docs
+* Docs
+* Types
 
 # TIPS
 
