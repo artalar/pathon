@@ -62,3 +62,7 @@ Except `immutablePreset` you can use any preset for any data-structure. Anyway y
 # TIPS
 
 > it's sound like `pazone`
+
+<!--
+* more predictable than `mobx`
+-->
