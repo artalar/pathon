@@ -1,3 +1,9 @@
+const deepCount = 100;
+
+const normalizedCount = 50;
+
+const iterations = 10;
+
 const initCounterStore = {
   scope: {
     counter: 0,
@@ -20,10 +26,10 @@ const deepState = {
     },
   },
 };
-const deepCount = 100;
-const normalizedCount = 50;
 
-const iterations = 100;
+// FIXME: check calls for clearly results
+const heavySubscriber /* like in real world - React.js component ot etc. */ = () =>
+  new Array(100).fill(Math.random()).reduce((acc, v) => acc + v + Math.random());
 
 set('iterations', iterations);
 
@@ -67,7 +73,11 @@ suite('redux', function() {
     const scope2Selector = createSelector(scope1Selector, scope1 => scope1.scope2);
     const scope3Selector = createSelector(scope2Selector, scope2 => scope2.scope3);
     const scope4Selector = createSelector(scope3Selector, scope3 => scope3.scope4);
-    const counterSelector = createSelector(scope4Selector, scope4 => scope4.counter);
+    const counterSelector = createSelector(
+      scope4Selector,
+      scope4 => scope4.counter,
+      heavySubscriber
+    );
 
     const deepCounter = createStore(deepCounterReducer(deepState));
     deepCounter.subscribe(() => counterSelector(deepCounter.getState()));
@@ -82,7 +92,11 @@ suite('redux', function() {
     const scope2Selector = createSelector(scope1Selector, scope1 => scope1.scope2);
     const scope3Selector = createSelector(scope2Selector, scope2 => scope2.scope3);
     const scope4Selector = createSelector(scope3Selector, scope3 => scope3.scope4);
-    const counterSelector = createSelector(scope4Selector, scope4 => scope4.counter);
+    const counterSelector = createSelector(
+      scope4Selector,
+      scope4 => scope4.counter,
+      heavySubscriber
+    );
 
     const deepCounter = createStore(deepCounterReducer(deepState));
     deepCounter.subscribe(() => counterSelector(deepCounter.getState()));
@@ -101,7 +115,7 @@ suite('redux', function() {
     const mod = id => ({ type: 'mod', payload: { id: id, text: Math.random().toString() } });
     const del = id => ({ type: 'delete', payload: id });
 
-    const newsSelector = createSelector(state => state.news, _ => _);
+    const newsSelector = createSelector(state => state.news, _ => _, heavySubscriber);
 
     const storeNormalized = createStore(normalizedReducer(initNormalizedState));
   });
@@ -117,7 +131,7 @@ suite('redux', function() {
 
     for (let i = 1; i < normalizedCount; i++) {
       storeNormalized.dispatch(add(i));
-      const itemSelector = createSelector(newsSelector, news => news[i]);
+      const itemSelector = createSelector(newsSelector, news => news[i], heavySubscriber);
       storeNormalized.subscribe(() => itemSelector(storeNormalized.getState()));
     }
     for (let i = 1; i < normalizedCount * 10; i++) {
@@ -148,7 +162,7 @@ suite('redux', function() {
     const decrement = () => {
       counterPath.set(counterPath.get() - 1);
     };
-    deepExamplePath.watch(() => {});
+    deepExamplePath.watch(heavySubscriber);
   });
   bench('deep counter', function() {
     const deepExamplePath = path('deep-example', { ...deepState }, immutablePreset);
@@ -227,7 +241,7 @@ suite('redux', function() {
 
     for (let i = 0; i < normalizedCount; i++) {
       add({ id: i, text: 'some news text' + i });
-      pShow.path(i).watch(() => {});
+      pShow.path(i).watch(heavySubscriber);
     }
     for (let i = 0; i < normalizedCount * 10; i++) {
       mod({ id: 1, text: Math.random().toString() });
