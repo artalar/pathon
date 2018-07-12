@@ -23,6 +23,9 @@ describe('pathon', () => {
     expect(typeof pathChild.path).toBe('function');
   });
 
+  // TODO: reset
+  // TODO: delete
+
   const testsGet = preset => () => {
     test('root default', () => {
       const pRoot = path('root', undefined, preset);
@@ -183,15 +186,15 @@ describe('pathon', () => {
   };
 
   const testBatch = preset => () => {
-    test('literal', () => {
+    test('batch', () => {
+      const iterations = 5;
+      const subscriptionToRoot = jest.fn();
+      const subscriptionToСounter = jest.fn();
       const pathRoot = path('root', { counter: 0 }, preset);
       const counter = pathRoot.path('counter');
-      const increment = () => counter.set(counter.get() + 1);
-      const iterations = 5;
-      let tracksRoot = 0;
-      let tracksCounter = 0;
-      pathRoot.watch(() => tracksRoot++);
-      counter.watch(() => tracksCounter++);
+
+      pathRoot.watch(subscriptionToRoot);
+      counter.watch(subscriptionToСounter);
 
       counter.batch(path => {
         for (let i = 1; i <= iterations; ++i) {
@@ -199,36 +202,48 @@ describe('pathon', () => {
         }
       });
 
-      expect(tracksRoot).toBe(1);
-      expect(tracksCounter).toBe(1);
+      expect(subscriptionToRoot.mock.calls.length).toBe(1);
+      expect(subscriptionToСounter.mock.calls.length).toBe(1);
       expect(counter.get()).toBe(iterations);
     });
   };
 
   const testWatch = preset => () => {
-    const pathRoot = path('root', { child: false }, preset);
-    let subscriptionToRoot1 = false;
-    let subscriptionToRoot2 = false;
-    let subscriptionToChild = false;
+    const pathRoot = path('root', { child1: false, child2: false }, preset);
+    const subscriptionToRoot = jest.fn();
+    const subscriptionToRootRepeat = jest.fn();
+    const subscriptionToChild1 = jest.fn();
+    const subscriptionToChild2 = jest.fn();
 
-    const unwatchRoot1 = pathRoot.watch(state => (subscriptionToRoot1 = state.child));
-    pathRoot.watch(state => (subscriptionToRoot2 = state.child));
-    pathRoot.path('child').watch(state => (subscriptionToChild = state));
+    const unwatchSubscriptionToRootRepeat = pathRoot.watch(subscriptionToRootRepeat);
+    pathRoot.watch(subscriptionToRoot);
+    pathRoot.watch(subscriptionToRootRepeat);
+    pathRoot.path('child1').watch(subscriptionToChild1);
+    pathRoot.path('child2').watch(subscriptionToChild2);
 
     test('watch', () => {
-      pathRoot.path('child').set(true);
+      pathRoot.path('child1').set(true);
 
-      expect(subscriptionToRoot1).toBe(true);
-      expect(subscriptionToRoot2).toBe(true);
-      expect(subscriptionToChild).toBe(true);
+      expect(subscriptionToRoot.mock.calls.length).toBe(1);
+      expect(subscriptionToRootRepeat.mock.calls.length).toBe(1);
+    });
+
+    test('watch only touched path`s', () => {
+      expect(subscriptionToChild1.mock.calls.length).toBe(1);
+      expect(subscriptionToChild2.mock.calls.length).toBe(0);
     });
 
     test('unwatch', () => {
-      unwatchRoot1();
-      pathRoot.path('child').set(1);
+      unwatchSubscriptionToRootRepeat();
+      pathRoot.path('child2').set(true);
 
-      expect(subscriptionToRoot1).toBe(true);
-      expect(subscriptionToChild).toBe(1);
+      expect(subscriptionToRoot.mock.calls.length).toBe(2);
+      expect(subscriptionToRootRepeat.mock.calls.length).toBe(1);
+    });
+
+    test('watch only touched path`s', () => {
+      expect(subscriptionToChild1.mock.calls.length).toBe(1);
+      expect(subscriptionToChild2.mock.calls.length).toBe(1);
     });
   };
 

@@ -6,39 +6,63 @@
 
 ### Example
 
-[![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/6rrm677pk)
+> Basic
+>
+> [![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/j2n4v685vv)
+
+> Complex
+>
+> [![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/6rrm677pk)
+
+# Instalation
+
+```
+npm install --save pathon
+```
+
+Or
+
+```
+yarn add pathon
+```
 
 # API
 
 ```javascript
-import { path } from './pathon';
+import { path, immutablePreset } from 'pathon';
 
-const pathRoot = path('root', { count: [1, 1, 1], individualCount: 1 });
+const pathRoot = path('root', { count: [1, 1, 1], individualCount: 1 }, immutablePreset);
 
 const pathCount = pathRoot.path('count');
 
 const {
+  // Every method is a function:
   get, // get `path` value
-  set, // set value to `path`
+  set, // set (and merge) value to `path`
+  batch, // accept callback which u can do many set's without call subscriptions (only after `batch`)
   watch, // subscribe to updates
   unwatch, // unsubscribe
-  compose, // compose many updates (`.set`)
   path, // create new `path` - element of current value by specified key
-  getPath, // get current `path` key
-  getPathFull, // get array of keys from root to current `path`
+  getPath, // get array of keys from root to current `path`
 } =
   pathRoot || pathCount || pathCount.path('0');
-
-// if you will update inner [property] `path` - all parent `path`'s watchers will be called
-// but other watchers of `path`'s in neighbour branches will not be called
-
-// except `immutablePreset` you can use any preset for any data-structure
 ```
+
+If you will update inner [property] `path` - all parent `path`'s watchers will be called but other watchers of `path`'s in neighbour branches will not be called
+
+Except `immutablePreset` you can use any preset for any data-structure. Anyway you can choose not to specify a preset - by default accepted structure will update by mutations.
+
+> Look at the [examples](#example) for detailed reference
 
 # TODO
 
-> advanced examples with presets
+* Docs
+* Types
 
 # TIPS
 
 > it's sound like `pazone`
+
+<!--
+* more predictable than `mobx`
+-->
