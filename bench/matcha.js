@@ -54,7 +54,7 @@ suite('immutable noop', function() {
   });
 });
 
-suite('redux', function() {
+/* redux */ suite('redux', function() {
   const { createStore } = require('redux');
   const {
     counterReducer,
@@ -115,7 +115,7 @@ suite('redux', function() {
     const mod = id => ({ type: 'mod', payload: { id: id, text: Math.random().toString() } });
     const del = id => ({ type: 'delete', payload: id });
 
-    const newsSelector = createSelector(state => state.news, _ => _, heavySubscriber);
+    const newsSelector = createSelector(state => state.news, _ => _);
 
     const storeNormalized = createStore(normalizedReducer(initNormalizedState));
   });
@@ -141,7 +141,7 @@ suite('redux', function() {
       storeNormalized.dispatch(del(i));
     }
   });
-}); // FIXME: build version
+});
 
 /* pathon */ suite('immutable pathon from ../es', function() {
   const { path, immutablePreset, mutablePreset } = require('../es');
@@ -242,6 +242,119 @@ suite('redux', function() {
     for (let i = 0; i < normalizedCount; i++) {
       add({ id: i, text: 'some news text' + i });
       pShow.path(i).watch(heavySubscriber);
+    }
+    for (let i = 0; i < normalizedCount * 10; i++) {
+      mod({ id: 1, text: Math.random().toString() });
+    }
+    for (let i = normalizedCount - 1; i >= 0; i--) {
+      del(i);
+    }
+  });
+});
+
+/* kefir.atom */ suite('immutable kefir.atom', function() {
+  const Atom = require('kefir.atom').default;
+  const holding = require('kefir.atom').holding;
+
+  bench('create deep counter', function() {
+    const deepExampleAtom = new Atom({ ...deepState });
+
+    const counterAtom = deepExampleAtom
+      .view('scope0')
+      .view('scope1')
+      .view('scope2')
+      .view('scope3')
+      .view('scope4')
+      .view('counter');
+    const increment = () => {
+      counterAtom.modify(value => value + 1);
+    };
+    const decrement = () => {
+      counterAtom.modify(value => value - 1);
+    };
+    deepExampleAtom.onValue(heavySubscriber);
+  });
+  bench('deep counter', function() {
+    const deepExampleAtom = new Atom({ ...deepState });
+
+    const counterAtom = deepExampleAtom
+      .view('scope0')
+      .view('scope1')
+      .view('scope2')
+      .view('scope3')
+      .view('scope4')
+      .view('counter');
+    const increment = () => {
+      counterAtom.modify(value => value + 1);
+    };
+    const decrement = () => {
+      counterAtom.modify(value => value - 1);
+    };
+    deepExampleAtom.onValue(heavySubscriber);
+
+    for (let i = 1; i < deepCount; i++) {
+      increment();
+      decrement();
+      deepExampleAtom.get();
+    }
+  });
+
+  //
+
+  bench('create normalized', function() {
+    const newsExampleAtom = Atom({ ...initNormalizedState });
+    const newsAtom = newsExampleAtom.view('news');
+    const showAtom = newsExampleAtom.view('show');
+
+    const add = news =>
+      holding(() => {
+        newsAtom.view(news.id).set(news);
+        newsAtom.modify(value => ({ ...value, [news.id]: news.text }));
+        showAtom.modify(value => [...value, news.id]);
+      });
+
+    const mod = news =>
+      newsAtom
+        .view(news.id)
+        .view('text')
+        .set(news.text);
+
+    const del = id => {
+      holding(() => {
+        newsAtom.view(id).remove();
+        showAtom.modify(value => value.filter(element => element !== id));
+      });
+    };
+  });
+
+  bench('normalized', function() {
+    const newsExampleAtom = Atom({ ...initNormalizedState });
+    const newsAtom = newsExampleAtom.view('news');
+    const showAtom = newsExampleAtom.view('show');
+
+    const add = news =>
+      holding(() => {
+        newsAtom.view(news.id).set(news);
+        newsAtom.modify(value => ({ ...value, [news.id]: news.text }));
+        showAtom.modify(value => [...value, news.id]);
+      });
+
+    const mod = news =>
+      newsAtom
+        .view(news.id)
+        .view('text')
+        .set(news.text);
+
+    const del = id => {
+      holding(() => {
+        newsAtom.view(id).remove();
+        showAtom.modify(value => value.filter(element => element !== id));
+      });
+    };
+
+    for (let i = 0; i < normalizedCount; i++) {
+      add({ id: i, text: 'some news text' + i });
+      showAtom.view(i).onValue(heavySubscriber);
     }
     for (let i = 0; i < normalizedCount * 10; i++) {
       mod({ id: 1, text: Math.random().toString() });

@@ -49,6 +49,8 @@
   },
   "homepage": "https://github.com/artalar/pathon#readme",
   "dependencies": {
+    "kefir": "^3.8.3",
+    "kefir.atom": "^5.5.1",
     "redux": "^4.0.0",
     "reselect": "^3.0.1"
   }
