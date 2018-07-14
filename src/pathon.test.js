@@ -216,7 +216,9 @@ describe('pathon', () => {
     const subscriptionToChild2 = jest.fn();
 
     const unwatchSubscriptionToRootRepeat = pathRoot.watch(subscriptionToRootRepeat);
+
     pathRoot.watch(subscriptionToRoot);
+    // test double subscription
     pathRoot.watch(subscriptionToRootRepeat);
     pathRoot.path('child1').watch(subscriptionToChild1);
     pathRoot.path('child2').watch(subscriptionToChild2);
