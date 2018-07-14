@@ -29,7 +29,6 @@ const deepState = {
   },
 };
 
-// FIXME: check calls for clearly results
 // like in real world - React.js component or etc.
 const createHeavySubscriber = () => {
   let calls = 0;
@@ -86,14 +85,11 @@ suite('immutable noop', function() {
     const scope2Selector = createSelector(scope1Selector, scope1 => scope1.scope2);
     const scope3Selector = createSelector(scope2Selector, scope2 => scope2.scope3);
     const scope4Selector = createSelector(scope3Selector, scope3 => scope3.scope4);
-    const counterSelector = createSelector(
-      scope4Selector,
-      scope4 => scope4.counter,
-      heavySubscriber
-    );
+    const counterSelector = createSelector(scope4Selector, scope4 => scope4.counter);
+    const memorizedSubcriber = (counterSelector, heavySubscriber);
 
     const deepCounter = createStore(deepCounterReducer(deepState));
-    deepCounter.subscribe(() => counterSelector(deepCounter.getState()));
+    deepCounter.subscribe(() => memorizedSubcriber(deepCounter.getState()));
 
     if (onlyCreation) return;
 
@@ -106,6 +102,7 @@ suite('immutable noop', function() {
     const realetedCalls = getSubscriberCalls();
     const expectedCalls = deepCount /* actionIncrement */ + deepCount; /* actionDecrement */
     if (realetedCalls !== expectedCalls) {
+      // FIXME: check calls for clearly results
       //throw new Error(`expected ${expectedCalls} calls but receive ${realetedCalls}`);
     }
   };
@@ -131,8 +128,8 @@ suite('immutable noop', function() {
     for (let i = 1; i < normalizedCount; i++) {
       storeNormalized.dispatch(add(i));
       const itemSelector = createSelector(newsSelector, news => news[i]);
-      const q = createSelector(itemSelector, heavySubscriber);
-      storeNormalized.subscribe(() => q(storeNormalized.getState()));
+      const memorizedSubcriber = createSelector(itemSelector, heavySubscriber);
+      storeNormalized.subscribe(() => memorizedSubcriber(storeNormalized.getState()));
     }
     let modRepeats = normalizedModRepeats;
     while (modRepeats--) {
