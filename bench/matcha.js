@@ -2,6 +2,8 @@ const deepCount = 100;
 
 const normalizedCount = 20;
 
+const normalizedModRepeats = 10;
+
 const iterations = 10;
 
 const initCounterStore = {
@@ -28,8 +30,17 @@ const deepState = {
 };
 
 // FIXME: check calls for clearly results
-const heavySubscriber /* like in real world - React.js component ot etc. */ = () =>
-  new Array(50).fill(Math.random()).reduce((acc, v) => acc + v + Math.random());
+// like in real world - React.js component or etc.
+const createHeavySubscriber = () => {
+  let calls = 0;
+  const getSubscriberCalls = () => calls;
+  const heavySubscriber = () => {
+    calls++;
+    return new Array(50).fill(Math.random()).reduce((acc, v) => acc + v + Math.random());
+  };
+
+  return { getSubscriberCalls, heavySubscriber };
+};
 
 set('iterations', iterations);
 
@@ -65,6 +76,8 @@ suite('immutable noop', function() {
   const { createSelector } = require('reselect');
 
   const testDeepCounter = onlyCreation => () => {
+    const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
+
     const actionIncrement = { type: 'INCREMENT' };
     const actionDecrement = { type: 'DECREMENT' };
 
@@ -89,6 +102,12 @@ suite('immutable noop', function() {
       deepCounter.dispatch(actionDecrement);
       deepCounter.getState();
     }
+
+    const realetedCalls = getSubscriberCalls();
+    const expectedCalls = deepCount /* actionIncrement */ + deepCount; /* actionDecrement */
+    if (realetedCalls !== expectedCalls) {
+      //throw new Error(`expected ${expectedCalls} calls but receive ${realetedCalls}`);
+    }
   };
 
   bench('create deep counter', testDeepCounter(true));
@@ -97,8 +116,10 @@ suite('immutable noop', function() {
   //
 
   const testNormalized = onlyCreation => () => {
+    const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
+
     const add = id => ({ type: 'add', payload: { id: id, text: 'some news text' + id } });
-    const mod = id => ({ type: 'mod', payload: { id: 1, text: Math.random().toString() } });
+    const mod = id => ({ type: 'mod', payload: { id, text: Math.random().toString() } });
     const del = id => ({ type: 'delete', payload: { id } });
 
     const newsSelector = createSelector(state => state.news, _ => _);
@@ -109,11 +130,15 @@ suite('immutable noop', function() {
 
     for (let i = 1; i < normalizedCount; i++) {
       storeNormalized.dispatch(add(i));
-      const itemSelector = createSelector(newsSelector, news => news[i], heavySubscriber);
-      storeNormalized.subscribe(() => itemSelector(storeNormalized.getState()));
+      const itemSelector = createSelector(newsSelector, news => news[i]);
+      const q = createSelector(itemSelector, heavySubscriber);
+      storeNormalized.subscribe(() => q(storeNormalized.getState()));
     }
-    for (let i = 1; i < normalizedCount * 10; i++) {
-      storeNormalized.dispatch(mod(i));
+    let modRepeats = normalizedModRepeats;
+    while (modRepeats--) {
+      for (let i = 1; i < normalizedCount * 10; i++) {
+        storeNormalized.dispatch(mod(i));
+      }
     }
     for (let i = normalizedCount - 1; i >= 1; i--) {
       storeNormalized.dispatch(del(i));
@@ -128,6 +153,8 @@ suite('immutable noop', function() {
   const { path, immutablePreset, mutablePreset } = require('../es');
 
   const testDeepCounter = onlyCreation => () => {
+    const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
+
     const pRoot = path('deep-example', { ...deepState }, immutablePreset);
 
     const pCounter = pRoot
@@ -160,6 +187,8 @@ suite('immutable noop', function() {
   //
 
   const testNormalized = onlyCreation => () => {
+    const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
+
     const newsExamplePath = path('news-example', { ...initNormalizedState }, immutablePreset);
     const pNews = newsExamplePath.path('news');
     const pShow = newsExamplePath.path('show');
@@ -170,11 +199,11 @@ suite('immutable noop', function() {
         pShow.path(news.id, news.id);
       });
 
-    const mod = news =>
+    const mod = id =>
       pNews
-        .path(news.id)
+        .path(id)
         .path('text')
-        .set(news.text);
+        .set(Math.random().toString());
 
     const del = id =>
       newsExamplePath.batch(() => {
@@ -189,8 +218,11 @@ suite('immutable noop', function() {
       add({ id: i, text: 'some news text' + i });
       pNews.path(i).watch(heavySubscriber);
     }
-    for (let i = 0; i < normalizedCount * 10; i++) {
-      mod({ id: 1, text: Math.random().toString() });
+    let modRepeats = normalizedModRepeats;
+    while (modRepeats--) {
+      for (let i = 1; i < normalizedCount * 10; i++) {
+        mod(i);
+      }
     }
     for (let i = normalizedCount - 1; i >= 0; i--) {
       del(i);
@@ -206,6 +238,8 @@ suite('immutable noop', function() {
   const holding = require('kefir.atom').holding;
 
   const testDeepCounter = onlyCreation => () => {
+    const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
+
     const deepExampleAtom = new Atom({ ...deepState });
 
     const counterAtom = deepExampleAtom
@@ -238,6 +272,8 @@ suite('immutable noop', function() {
   //
 
   const testNormalized = onlyCreation => () => {
+    const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
+
     const newsExampleAtom = Atom({ ...initNormalizedState });
     const newsAtom = newsExampleAtom.view('news');
     const showAtom = newsExampleAtom.view('show');
@@ -248,11 +284,11 @@ suite('immutable noop', function() {
         showAtom.modify(value => [...value, news.id]);
       });
 
-    const mod = news =>
+    const mod = id =>
       newsAtom
-        .view(news.id)
+        .view(id)
         .view('text')
-        .set(news.text);
+        .set(Math.random().toString());
 
     const del = id => {
       holding(() => {
@@ -267,8 +303,11 @@ suite('immutable noop', function() {
       add({ id: i, text: 'some news text' + i });
       showAtom.view(i).onValue(heavySubscriber);
     }
-    for (let i = 0; i < normalizedCount * 10; i++) {
-      mod({ id: 1, text: Math.random().toString() });
+    let modRepeats = normalizedModRepeats;
+    while (modRepeats--) {
+      for (let i = 1; i < normalizedCount * 10; i++) {
+        mod(i);
+      }
     }
     for (let i = normalizedCount - 1; i >= 0; i--) {
       del(i);
