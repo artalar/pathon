@@ -1,5 +1,3 @@
-// @flow
-
 const mutablePreset = {
   hasPath(state, key) {
     return state.hasOwnProperty(key);
@@ -10,9 +8,8 @@ const mutablePreset = {
   mergeStateAndPayload(state, payload) {
     if (typeof state === 'object') {
       return Object.assign(state, payload);
-    } else {
-      return payload;
     }
+    return payload;
   },
   insertValueToStateByPath(state, key, value) {
     state[key] = value;
@@ -39,10 +36,10 @@ const path = (key, initialState = {}, updaterPreset = mutablePreset) =>
     key, //
     initialState,
     updaterPreset, //
-    createMainCore(key, initialState, updaterPreset) // parent
+    createMainCore(key, initialState, updaterPreset), // parent
   );
 
-const createMainCore = (key, initialState, updaterPreset) => {
+const createMainCore = (key, initialState) => {
   key = key || 'root';
 
   const rootState = { [key]: initialState };
@@ -55,12 +52,13 @@ const createMainCore = (key, initialState, updaterPreset) => {
 
   const updates = new Map();
   let nestedLevel = 0;
-  const __addWatchersForUpdate = (watchers, state) => void updates.set(watchers, state);
+  const __addWatchersForUpdate = (watchers, state) =>
+    void updates.set(watchers, state);
   const __freezeWatchers = () => void ++nestedLevel;
   const __unfreezeWatchers = () => {
     if (--nestedLevel !== 0) return;
-    for (let [watchers, state] of updates) {
-      for (let watcher of watchers) safeExecutor(watcher, state);
+    for (const [watchers, state] of updates) {
+      for (const watcher of watchers) safeExecutor(watcher, state);
     }
     updates.clear();
   };
@@ -107,7 +105,7 @@ class PathSystem {
     const newState = this.__updaterPreset.insertValueToStateByPath(
       this.get(),
       childKey,
-      childState
+      childState,
     );
     this.__parent.__setChildStateToOwnStateByPath(this.__key, newState);
     this.__parent.__addWatchersForUpdate(this.__watchers, newState);
@@ -125,7 +123,11 @@ class Path extends PathSystem {
     this.__freezeWatchers();
 
     try {
-      if (this.__children.size !== 0 && typeof payload === 'object' && payload !== null) {
+      if (
+        this.__children.size !== 0 &&
+        typeof payload === 'object' &&
+        payload !== null
+      ) {
         this.__ignoreSetFromChildLevel++;
 
         const childrenWithPath = this.__children;
@@ -133,11 +135,11 @@ class Path extends PathSystem {
 
         // need to update only overlapped children
         if (childrenWithPath.size < newChildren.length) {
-          for (let [key, value] of childrenWithPath.entries()) {
+          for (const [key, value] of childrenWithPath.entries()) {
             value.set(payload[key]);
           }
         } else {
-          for (let [key, value] of newChildren) {
+          for (const [key, value] of newChildren) {
             const child = childrenWithPath.get(key);
             if (child !== undefined) child.set(value);
           }
@@ -189,7 +191,12 @@ class Path extends PathSystem {
 
     if (__children.has(childKey) === true) return __children.get(childKey);
 
-    const childPath = new Path(childKey, childInitialState, childUpdaterPreset, this);
+    const childPath = new Path(
+      childKey,
+      childInitialState,
+      childUpdaterPreset,
+      this,
+    );
 
     __children.set(childKey, childPath);
 
