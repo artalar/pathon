@@ -1,6 +1,6 @@
 const deepCount = 100;
 
-const normalizedCount = 20;
+const normalizedCount = 50;
 
 const normalizedModRepeats = 10;
 
@@ -142,8 +142,8 @@ suite('immutable noop', function() {
     }
   };
 
-  bench('create normalized', testNormalized(true));
-  bench('normalized', testNormalized(false));
+  bench(`create normalized with ${normalizedCount} subscribers`, testNormalized(true));
+  bench(`modify normalized with ${normalizedCount} subscribers`, testNormalized(false));
 });
 
 /* pathon */ suite('immutable pathon from ../es', function() {
@@ -226,8 +226,8 @@ suite('immutable noop', function() {
     }
   };
 
-  bench('create normalized', testNormalized(true));
-  bench('normalized', testNormalized(false));
+  bench(`create normalized with ${normalizedCount} subscribers`, testNormalized(true));
+  bench(`modify normalized with ${normalizedCount} subscribers`, testNormalized(false));
 });
 
 /* kefir.atom */ suite('immutable kefir.atom', function() {
@@ -311,6 +311,6 @@ suite('immutable noop', function() {
     }
   };
 
-  bench('create normalized', testNormalized(true));
-  bench('normalized', testNormalized(false));
+  bench(`create normalized with ${normalizedCount} subscribers`, testNormalized(true));
+  bench(`modify normalized with ${normalizedCount} subscribers`, testNormalized(false));
 });
