@@ -133,7 +133,7 @@ suite('immutable noop', function() {
     }
     let modRepeats = normalizedModRepeats;
     while (modRepeats--) {
-      for (let i = 1; i < normalizedCount * 10; i++) {
+      for (let i = 1; i < normalizedCount; i++) {
         storeNormalized.dispatch(mod(i));
       }
     }
@@ -217,7 +217,7 @@ suite('immutable noop', function() {
     }
     let modRepeats = normalizedModRepeats;
     while (modRepeats--) {
-      for (let i = 1; i < normalizedCount * 10; i++) {
+      for (let i = 1; i < normalizedCount; i++) {
         mod(i);
       }
     }
@@ -298,11 +298,11 @@ suite('immutable noop', function() {
 
     for (let i = 0; i < normalizedCount; i++) {
       add({ id: i, text: 'some news text' + i });
-      showAtom.view(i).onValue(heavySubscriber);
+      newsAtom.view(i).onValue(heavySubscriber);
     }
     let modRepeats = normalizedModRepeats;
     while (modRepeats--) {
-      for (let i = 1; i < normalizedCount * 10; i++) {
+      for (let i = 1; i < normalizedCount; i++) {
         mod(i);
       }
     }
