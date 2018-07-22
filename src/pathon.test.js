@@ -76,7 +76,10 @@ describe('pathon', () => {
       });
 
       test('chidren deep', () => {
-        const initialState = { child1: true, child2: { child: { child: true } } };
+        const initialState = {
+          child1: true,
+          child2: { child: { child: true } },
+        };
         const pRoot = path('root', initialState, preset);
 
         expect(pRoot.get()).toBe(initialState);
@@ -86,7 +89,7 @@ describe('pathon', () => {
             .path('child2')
             .path('child')
             .path('child')
-            .get()
+            .get(),
         ).toBe(initialState.child2.child.child);
       });
 
@@ -96,14 +99,17 @@ describe('pathon', () => {
         const pRoot = path('root', initialStateRoot, preset);
         const pChild1 = pRoot.path('child2', initialStateChild2);
 
-        expect(pRoot.get()).toEqual({ child1: true, child2: { child: { child: true } } });
+        expect(pRoot.get()).toEqual({
+          child1: true,
+          child2: { child: { child: true } },
+        });
         expect(pRoot.path('child1').get()).toBe(initialStateRoot.child1);
         expect(pChild1.get()).toBe(initialStateChild2);
         expect(
           pChild1
             .path('child')
             .path('child')
-            .get()
+            .get(),
         ).toBe(initialStateChild2.child.child);
       });
     });
@@ -154,7 +160,7 @@ describe('pathon', () => {
             .path(1)
             .path('child')
             .path('child')
-            .get()
+            .get(),
         ).toBe(initialState[1].child.child);
       });
 
@@ -171,7 +177,7 @@ describe('pathon', () => {
           pChild1
             .path('child')
             .path('child')
-            .get()
+            .get(),
         ).toBe(initialStateChild1.child.child);
       });
     });
@@ -215,7 +221,9 @@ describe('pathon', () => {
     const subscriptionToChild1 = jest.fn();
     const subscriptionToChild2 = jest.fn();
 
-    const unwatchSubscriptionToRootRepeat = pathRoot.watch(subscriptionToRootRepeat);
+    const unwatchSubscriptionToRootRepeat = pathRoot.watch(
+      subscriptionToRootRepeat,
+    );
 
     pathRoot.watch(subscriptionToRoot);
     // test double subscription
@@ -258,15 +266,28 @@ describe('pathon', () => {
 
     describe('watchers', testWatch(immutablePreset));
 
+    test('immutable update parent', () => {
+      const initialState = { counter: 0 };
+      const pathRoot = path('root', initialState, immutablePreset);
+      const pathCounter1 = pathRoot.path('counter');
+
+      pathCounter1.set(1);
+
+      expect(pathRoot.get() !== initialState).toBe(true);
+    });
+
     test('set and update children', () => {
-      const pathRoot = path(
-        'root',
-        { counter1: 0, counter2: 0, counterDeep: { counter: 0 } },
-        immutablePreset
-      );
+      const initialState = {
+        counter1: 0,
+        counter2: 0,
+        counterDeep: { counter: 0 },
+      };
+      const pathRoot = path('root', initialState, immutablePreset);
       const pathCounter1 = pathRoot.path('counter1');
       const pathCounter2 = pathRoot.path('counter2');
-      const pathCounterDeepCounter = pathRoot.path('counterDeep').path('counter');
+      const pathCounterDeepCounter = pathRoot
+        .path('counterDeep')
+        .path('counter');
 
       let trackingCounter1 = false;
       let trackingCounter2 = false;
