@@ -45,9 +45,9 @@ const createHeavySubscriber = () => {
 
 set('iterations', iterations);
 
-suite('immutable noop', function() {
+suite('immutable noop', () => {
   set('iterations', iterations);
-  bench('create', function() {
+  bench('create', () => {
     const store = {
       scope: {
         counter: 0,
@@ -55,7 +55,7 @@ suite('immutable noop', function() {
     };
   });
   let store = initCounterStore;
-  bench('modify', function() {
+  bench('modify', () => {
     store = {
       ...store,
       scope: {
@@ -66,7 +66,7 @@ suite('immutable noop', function() {
   });
 });
 
-/* redux */ suite('redux', function() {
+/* redux */ suite('redux', () => {
   const { createStore } = require('redux');
   const {
     counterReducer,
@@ -121,7 +121,7 @@ suite('immutable noop', function() {
       deepCount /* actionIncrement */ + deepCount; /* actionDecrement */
     if (realetedCalls !== expectedCalls) {
       // FIXME: check calls for clearly results
-      //throw new Error(`expected ${expectedCalls} calls but receive ${realetedCalls}`);
+      // throw new Error(`expected ${expectedCalls} calls but receive ${realetedCalls}`);
     }
   };
 
@@ -178,7 +178,7 @@ suite('immutable noop', function() {
   );
 });
 
-/* pathon */ suite('immutable pathon from ../es', function() {
+/* pathon */ suite('immutable pathon from ../es', () => {
   const { path, immutablePreset, mutablePreset } = require('../es');
 
   const testDeepCounter = onlyCreation => () => {
@@ -272,7 +272,7 @@ suite('immutable noop', function() {
   );
 });
 
-/* kefir.atom */ suite('immutable kefir.atom', function() {
+/* kefir.atom */ suite('immutable kefir.atom', () => {
   const Atom = require('kefir.atom').default;
   const holding = require('kefir.atom').holding;
 
