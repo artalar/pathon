@@ -4,23 +4,23 @@ const path = require('./index').path;
 const immutablePreset = require('./index').immutablePreset;
 describe('pathon', () => {
   test('methods', () => {
-    const pathRoot = path('root', { child: true }, immutablePreset);
-    expect(typeof pathRoot.set).toBe('function');
-    expect(typeof pathRoot.get).toBe('function');
-    expect(typeof pathRoot.batch).toBe('function');
-    expect(typeof pathRoot.watch).toBe('function');
-    expect(typeof pathRoot.unwatch).toBe('function');
-    expect(typeof pathRoot.getPath).toBe('function');
-    expect(typeof pathRoot.path).toBe('function');
+    const pRoot = path('root', { child: true }, immutablePreset);
+    expect(typeof pRoot.set).toBe('function');
+    expect(typeof pRoot.get).toBe('function');
+    expect(typeof pRoot.batch).toBe('function');
+    expect(typeof pRoot.watch).toBe('function');
+    expect(typeof pRoot.unwatch).toBe('function');
+    expect(typeof pRoot.getPath).toBe('function');
+    expect(typeof pRoot.path).toBe('function');
 
-    const pathChild = pathRoot.path('child');
-    expect(typeof pathChild.set).toBe('function');
-    expect(typeof pathChild.get).toBe('function');
-    expect(typeof pathChild.batch).toBe('function');
-    expect(typeof pathChild.watch).toBe('function');
-    expect(typeof pathChild.unwatch).toBe('function');
-    expect(typeof pathChild.getPath).toBe('function');
-    expect(typeof pathChild.path).toBe('function');
+    const pChild = pRoot.path('child');
+    expect(typeof pChild.set).toBe('function');
+    expect(typeof pChild.get).toBe('function');
+    expect(typeof pChild.batch).toBe('function');
+    expect(typeof pChild.watch).toBe('function');
+    expect(typeof pChild.unwatch).toBe('function');
+    expect(typeof pChild.getPath).toBe('function');
+    expect(typeof pChild.path).toBe('function');
   });
 
   // TODO: reset
@@ -185,24 +185,24 @@ describe('pathon', () => {
 
   const testMemorizedChild = preset => () => {
     test('memirize first child', () => {
-      const pathRoot = path('root', { child: true }, preset);
+      const pRoot = path('root', { child: true }, preset);
 
-      expect(pathRoot.path('child')).toBe(pathRoot.path('child'));
+      expect(pRoot.path('child')).toBe(pRoot.path('child'));
     });
   };
 
   const testBatch = preset => () => {
-    test('batch', () => {
+    test('batch itself for loop', () => {
       const iterations = 5;
       const subscriptionToRoot = jest.fn();
       const subscriptionToСounter = jest.fn();
-      const pathRoot = path('root', { counter: 0 }, preset);
-      const counter = pathRoot.path('counter');
+      const pRoot = path('root', { counter: 0 }, preset);
+      const pCounter = pRoot.path('counter');
 
-      pathRoot.watch(subscriptionToRoot);
-      counter.watch(subscriptionToСounter);
+      pRoot.watch(subscriptionToRoot);
+      pCounter.watch(subscriptionToСounter);
 
-      counter.batch(path => {
+      pCounter.batch(path => {
         for (let i = 1; i <= iterations; ++i) {
           path.set(i);
         }
@@ -210,29 +210,71 @@ describe('pathon', () => {
 
       expect(subscriptionToRoot.mock.calls.length).toBe(1);
       expect(subscriptionToСounter.mock.calls.length).toBe(1);
-      expect(counter.get()).toBe(iterations);
+      expect(pCounter.get()).toBe(iterations);
+    });
+
+    test('batch inner path from outside', () => {
+      const iterations = 5;
+      const subscriptionToRoot = jest.fn();
+      const subscriptionToСounter = jest.fn();
+      const pRoot = path('root', { counter: 0 }, preset);
+      const pCounter = pRoot.path('counter');
+
+      pRoot.watch(subscriptionToRoot);
+      pCounter.watch(subscriptionToСounter);
+
+      pCounter.batch(path => {
+        for (let i = 1; i <= iterations; ++i) {
+          pCounter.set(i);
+        }
+      });
+
+      expect(subscriptionToRoot.mock.calls.length).toBe(1);
+      expect(subscriptionToСounter.mock.calls.length).toBe(1);
+      expect(pCounter.get()).toBe(iterations);
+    });
+
+    test('batch outer path from outside', () => {
+      const iterations = 5;
+      const subscriptionToRoot = jest.fn();
+      const subscriptionToСounter = jest.fn();
+      const pRoot = path('root', { counter: 0 }, preset);
+      const pCounter = pRoot.path('counter');
+
+      pRoot.watch(subscriptionToRoot);
+      pCounter.watch(subscriptionToСounter);
+
+      pCounter.batch(path => {
+        for (let i = 1; i <= iterations; ++i) {
+          pRoot.set({ counter: i });
+        }
+      });
+
+      expect(subscriptionToRoot.mock.calls.length).toBe(1);
+      expect(subscriptionToСounter.mock.calls.length).toBe(1);
+      expect(pCounter.get()).toBe(iterations);
     });
   };
 
   const testWatch = preset => () => {
-    const pathRoot = path('root', { child1: false, child2: false }, preset);
+    const pRoot = path('root', { child1: false, child2: false }, preset);
     const subscriptionToRoot = jest.fn();
     const subscriptionToRootRepeat = jest.fn();
     const subscriptionToChild1 = jest.fn();
     const subscriptionToChild2 = jest.fn();
 
-    const unwatchSubscriptionToRootRepeat = pathRoot.watch(
+    const unwatchSubscriptionToRootRepeat = pRoot.watch(
       subscriptionToRootRepeat,
     );
 
-    pathRoot.watch(subscriptionToRoot);
+    pRoot.watch(subscriptionToRoot);
     // test double subscription
-    pathRoot.watch(subscriptionToRootRepeat);
-    pathRoot.path('child1').watch(subscriptionToChild1);
-    pathRoot.path('child2').watch(subscriptionToChild2);
+    pRoot.watch(subscriptionToRootRepeat);
+    pRoot.path('child1').watch(subscriptionToChild1);
+    pRoot.path('child2').watch(subscriptionToChild2);
 
     test('watch', () => {
-      pathRoot.path('child1').set(true);
+      pRoot.path('child1').set(true);
 
       expect(subscriptionToRoot.mock.calls.length).toBe(1);
       expect(subscriptionToRootRepeat.mock.calls.length).toBe(1);
@@ -245,7 +287,7 @@ describe('pathon', () => {
 
     test('unwatch', () => {
       unwatchSubscriptionToRootRepeat();
-      pathRoot.path('child2').set(true);
+      pRoot.path('child2').set(true);
 
       expect(subscriptionToRoot.mock.calls.length).toBe(2);
       expect(subscriptionToRootRepeat.mock.calls.length).toBe(1);
@@ -268,12 +310,12 @@ describe('pathon', () => {
 
     test('immutable update parent', () => {
       const initialState = { counter: 0 };
-      const pathRoot = path('root', initialState, immutablePreset);
-      const pathCounter1 = pathRoot.path('counter');
+      const pRoot = path('root', initialState, immutablePreset);
+      const pCounter1 = pRoot.path('counter');
 
-      pathCounter1.set(1);
+      pCounter1.set(1);
 
-      expect(pathRoot.get() !== initialState).toBe(true);
+      expect(pRoot.get() !== initialState).toBe(true);
     });
 
     test('set and update children', () => {
@@ -282,10 +324,10 @@ describe('pathon', () => {
         counter2: 0,
         counterDeep: { counter: 0 },
       };
-      const pathRoot = path('root', initialState, immutablePreset);
-      const pathCounter1 = pathRoot.path('counter1');
-      const pathCounter2 = pathRoot.path('counter2');
-      const pathCounterDeepCounter = pathRoot
+      const pRoot = path('root', initialState, immutablePreset);
+      const pCounter1 = pRoot.path('counter1');
+      const pCounter2 = pRoot.path('counter2');
+      const pCounterDeepCounter = pRoot
         .path('counterDeep')
         .path('counter');
 
@@ -293,33 +335,33 @@ describe('pathon', () => {
       let trackingCounter2 = false;
       let trackingCounterDeepCounter = false;
 
-      pathCounter1.watch(() => (trackingCounter1 = true));
-      pathCounter2.watch(() => (trackingCounter2 = true));
-      pathCounterDeepCounter.watch(() => (trackingCounterDeepCounter = true));
+      pCounter1.watch(() => (trackingCounter1 = true));
+      pCounter2.watch(() => (trackingCounter2 = true));
+      pCounterDeepCounter.watch(() => (trackingCounterDeepCounter = true));
 
-      pathRoot.set({ counter1: 1 });
-      pathRoot.set({ counterDeep: { counter: 1 } });
+      pRoot.set({ counter1: 1 });
+      pRoot.set({ counterDeep: { counter: 1 } });
 
-      expect(pathCounter1.get()).toBe(1);
+      expect(pCounter1.get()).toBe(1);
       expect(trackingCounter1).toBe(true);
       expect(trackingCounter2).toBe(false);
       expect(trackingCounterDeepCounter).toBe(true);
-      expect(pathCounterDeepCounter.get()).toBe(1);
+      expect(pCounterDeepCounter.get()).toBe(1);
     });
 
     // TODO: rewrite
     test('root path state', () => {
       const initialState = {};
-      const pathRoot = path('root', initialState, immutablePreset);
-      expect(pathRoot.get()).toBe(initialState);
+      const pRoot = path('root', initialState, immutablePreset);
+      expect(pRoot.get()).toBe(initialState);
 
       let tracking;
       const watcher = newState => (tracking = newState);
       const deepField = {};
-      pathRoot.watch(watcher);
-      pathRoot.set({ deepField });
-      expect(pathRoot.get()).toBe(tracking);
-      expect(pathRoot.get().deepField).toBe(deepField);
+      pRoot.watch(watcher);
+      pRoot.set({ deepField });
+      expect(pRoot.get()).toBe(tracking);
+      expect(pRoot.get().deepField).toBe(deepField);
     });
   });
 
