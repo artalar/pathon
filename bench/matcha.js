@@ -35,7 +35,9 @@ const createHeavySubscriber = () => {
   const getSubscriberCalls = () => calls;
   const heavySubscriber = () => {
     calls++;
-    return new Array(50).fill(Math.random()).reduce((acc, v) => acc + v + Math.random());
+    return new Array(50)
+      .fill(Math.random())
+      .reduce((acc, v) => acc + v + Math.random());
   };
 
   return { getSubscriberCalls, heavySubscriber };
@@ -81,11 +83,26 @@ suite('immutable noop', function() {
     const actionDecrement = { type: 'DECREMENT' };
 
     const scope0Selector = createSelector(state => state.scope0, _ => _);
-    const scope1Selector = createSelector(scope0Selector, scope0 => scope0.scope1);
-    const scope2Selector = createSelector(scope1Selector, scope1 => scope1.scope2);
-    const scope3Selector = createSelector(scope2Selector, scope2 => scope2.scope3);
-    const scope4Selector = createSelector(scope3Selector, scope3 => scope3.scope4);
-    const counterSelector = createSelector(scope4Selector, scope4 => scope4.counter);
+    const scope1Selector = createSelector(
+      scope0Selector,
+      scope0 => scope0.scope1,
+    );
+    const scope2Selector = createSelector(
+      scope1Selector,
+      scope1 => scope1.scope2,
+    );
+    const scope3Selector = createSelector(
+      scope2Selector,
+      scope2 => scope2.scope3,
+    );
+    const scope4Selector = createSelector(
+      scope3Selector,
+      scope3 => scope3.scope4,
+    );
+    const counterSelector = createSelector(
+      scope4Selector,
+      scope4 => scope4.counter,
+    );
     const memorizedSubcriber = (counterSelector, heavySubscriber);
 
     const deepCounter = createStore(deepCounterReducer(deepState));
@@ -100,7 +117,8 @@ suite('immutable noop', function() {
     }
 
     const realetedCalls = getSubscriberCalls();
-    const expectedCalls = deepCount /* actionIncrement */ + deepCount; /* actionDecrement */
+    const expectedCalls =
+      deepCount /* actionIncrement */ + deepCount; /* actionDecrement */
     if (realetedCalls !== expectedCalls) {
       // FIXME: check calls for clearly results
       //throw new Error(`expected ${expectedCalls} calls but receive ${realetedCalls}`);
@@ -115,8 +133,14 @@ suite('immutable noop', function() {
   const testNormalized = onlyCreation => () => {
     const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
 
-    const add = id => ({ type: 'add', payload: { id: id, text: 'some news text' + id } });
-    const mod = id => ({ type: 'mod', payload: { id, text: Math.random().toString() } });
+    const add = id => ({
+      type: 'add',
+      payload: { id: id, text: 'some news text' + id },
+    });
+    const mod = id => ({
+      type: 'mod',
+      payload: { id, text: Math.random().toString() },
+    });
     const del = id => ({ type: 'delete', payload: { id } });
 
     const newsSelector = createSelector(state => state.news, _ => _);
@@ -129,7 +153,9 @@ suite('immutable noop', function() {
       storeNormalized.dispatch(add(i));
       const itemSelector = createSelector(newsSelector, news => news[i]);
       const memorizedSubcriber = createSelector(itemSelector, heavySubscriber);
-      storeNormalized.subscribe(() => memorizedSubcriber(storeNormalized.getState()));
+      storeNormalized.subscribe(() =>
+        memorizedSubcriber(storeNormalized.getState()),
+      );
     }
     let modRepeats = normalizedModRepeats;
     while (modRepeats--) {
@@ -142,8 +168,14 @@ suite('immutable noop', function() {
     }
   };
 
-  bench(`create normalized with ${normalizedCount} subscribers`, testNormalized(true));
-  bench(`modify normalized with ${normalizedCount} subscribers`, testNormalized(false));
+  bench(
+    `create normalized with ${normalizedCount} subscribers`,
+    testNormalized(true),
+  );
+  bench(
+    `modify normalized with ${normalizedCount} subscribers`,
+    testNormalized(false),
+  );
 });
 
 /* pathon */ suite('immutable pathon from ../es', function() {
@@ -186,7 +218,11 @@ suite('immutable noop', function() {
   const testNormalized = onlyCreation => () => {
     const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();
 
-    const newsExamplePath = path('news-example', { ...initNormalizedState }, immutablePreset);
+    const newsExamplePath = path(
+      'news-example',
+      { ...initNormalizedState },
+      immutablePreset,
+    );
     const pNews = newsExamplePath.path('news');
     const pShow = newsExamplePath.path('show');
 
@@ -226,8 +262,14 @@ suite('immutable noop', function() {
     }
   };
 
-  bench(`create normalized with ${normalizedCount} subscribers`, testNormalized(true));
-  bench(`modify normalized with ${normalizedCount} subscribers`, testNormalized(false));
+  bench(
+    `create normalized with ${normalizedCount} subscribers`,
+    testNormalized(true),
+  );
+  bench(
+    `modify normalized with ${normalizedCount} subscribers`,
+    testNormalized(false),
+  );
 });
 
 /* kefir.atom */ suite('immutable kefir.atom', function() {
@@ -311,6 +353,12 @@ suite('immutable noop', function() {
     }
   };
 
-  bench(`create normalized with ${normalizedCount} subscribers`, testNormalized(true));
-  bench(`modify normalized with ${normalizedCount} subscribers`, testNormalized(false));
+  bench(
+    `create normalized with ${normalizedCount} subscribers`,
+    testNormalized(true),
+  );
+  bench(
+    `modify normalized with ${normalizedCount} subscribers`,
+    testNormalized(false),
+  );
 });
