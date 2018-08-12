@@ -7,8 +7,7 @@ declare export class Path<T> {
   watch(fn: (state: T) => void): Unwatch,
   unwatch: Unwatch,
   batch(fn: (path: Path<T>) => void): void,
-  getPath(): string,
-  getPathFull(): string[],
+  getPath(): string[],
   path<K: $Keys<T>>(key: K): Path<$ElementType<T, K>>
 }
 declare export function path<T>(name: string, defaultState: T): Path<T>

@@ -89,7 +89,7 @@ const immutablePreset = {
       newState[key] = value;
       return newState;
     } else if (typeof state === 'object' && state !== null) {
-      return Object.assign(state, { [key]: value });
+      return Object.assign({}, state, { [key]: value });
     } else {
       // TODO: ?
       return state;
