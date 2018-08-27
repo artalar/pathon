@@ -1,7 +1,5 @@
-// @flow
+const { path, immutablePreset } = require('./index');
 
-const path = require('./index').path;
-const immutablePreset = require('./index').immutablePreset;
 describe('pathon', () => {
   test('methods', () => {
     const pRoot = path('root', { child: true }, immutablePreset);
@@ -223,7 +221,7 @@ describe('pathon', () => {
       pRoot.watch(subscriptionToRoot);
       pCounter.watch(subscriptionToСounter);
 
-      pCounter.batch(path => {
+      pCounter.batch(() => {
         for (let i = 1; i <= iterations; ++i) {
           pCounter.set(i);
         }
@@ -244,7 +242,7 @@ describe('pathon', () => {
       pRoot.watch(subscriptionToRoot);
       pCounter.watch(subscriptionToСounter);
 
-      pCounter.batch(path => {
+      pCounter.batch(() => {
         for (let i = 1; i <= iterations; ++i) {
           pRoot.set({ counter: i });
         }
@@ -299,6 +297,53 @@ describe('pathon', () => {
     });
   };
 
+  const testDelete = preset => () => {
+    test('object', () => {
+      const pRoot = path('root', { 1: 1, 2: 2 }, preset);
+
+      pRoot.del('1');
+
+      expect(pRoot.get()).toEqual({ 2: 2 });
+    });
+
+    test('array', () => {
+      const pRoot = path('root', [0, 1, 2, 3, 4], preset);
+
+      pRoot.del(-1);
+      expect(pRoot.get()).toEqual([0, 1, 2, 3, 4]);
+      pRoot.del('4');
+      expect(pRoot.get()).toEqual([0, 1, 2, 3]);
+      pRoot.del('2');
+      expect(pRoot.get()).toEqual([0, 1, 3]);
+      pRoot.del('0');
+      expect(pRoot.get()).toEqual([1, 3]);
+      pRoot.del(pRoot.get().length);
+      expect(pRoot.get()).toEqual([1, 3]);
+      pRoot.del(pRoot.get().length - 1);
+      expect(pRoot.get()).toEqual([1]);
+      pRoot.del(0);
+      expect(pRoot.get()).toEqual([]);
+    });
+
+    test('nested', () => {
+      const pRoot = path(
+        'root',
+        { 1: 1, 2: [{ 1: 1, 2: 2 }, { 1: 1, 2: 2 }, { 1: 1, 2: 2 }] },
+        preset,
+      );
+
+      pRoot
+        .path('2')
+        .path('1')
+        .del('1');
+
+      expect(pRoot.get()).toEqual({
+        1: 1,
+        2: [{ 1: 1, 2: 2 }, { 2: 2 }, { 1: 1, 2: 2 }],
+      });
+    });
+  };
+
   describe('immutablePreset', () => {
     describe('get', testsGet(immutablePreset));
 
@@ -307,6 +352,8 @@ describe('pathon', () => {
     describe('batch', testBatch(immutablePreset));
 
     describe('watchers', testWatch(immutablePreset));
+
+    describe('delete', testDelete(immutablePreset));
 
     test('immutable update parent', () => {
       const initialState = { counter: 0 };
@@ -327,9 +374,7 @@ describe('pathon', () => {
       const pRoot = path('root', initialState, immutablePreset);
       const pCounter1 = pRoot.path('counter1');
       const pCounter2 = pRoot.path('counter2');
-      const pCounterDeepCounter = pRoot
-        .path('counterDeep')
-        .path('counter');
+      const pCounterDeepCounter = pRoot.path('counterDeep').path('counter');
 
       let trackingCounter1 = false;
       let trackingCounter2 = false;
@@ -373,5 +418,7 @@ describe('pathon', () => {
     describe('batch', testBatch());
 
     describe('watchers', testWatch());
+
+    describe('delete', testDelete());
   });
 });

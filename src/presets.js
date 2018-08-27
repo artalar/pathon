@@ -1,27 +1,27 @@
-// TODO: tests
 // match unsupported types and throw error?
 
 const mutablePreset = {
   hasPath(state, key) {
     if (state instanceof Map || state instanceof Set) {
       return state.has(key);
-    } else if (typeof state === 'object' && state !== null) {
-      return state.hasOwnProperty(key);
-    } else {
-      return false;
     }
+    if (typeof state === 'object' && state !== null) {
+      return state.hasOwnProperty(key);
+    }
+    return false;
   },
   getValueByKey(state, key) {
     if (state instanceof Map) {
       return state.get(key);
-    } else if (state instanceof Set) {
-      return [...state][key];
-    } else if (typeof state === 'object' && state !== null) {
-      return state[key];
-    } else {
-      // TODO: ?
-      return state;
     }
+    if (state instanceof Set) {
+      return [...state][key];
+    }
+    if (typeof state === 'object' && state !== null) {
+      return state[key];
+    }
+    // TODO: ?
+    return state;
   },
   mergeStateAndPayload(state, payload) {
     return payload;
@@ -29,16 +29,34 @@ const mutablePreset = {
   insertValueToStateByPath(state, key, value) {
     if (state instanceof Map) {
       return state.set(key, value);
-    } else if (state instanceof Set) {
+    }
+    if (state instanceof Set) {
       return state.add(value);
       // Array to
-    } else if (typeof state === 'object' && state !== null) {
+    }
+    if (typeof state === 'object' && state !== null) {
       state[key] = value;
       return state;
-    } else {
-      // TODO: ?
+    }
+    // TODO: ?
+    return state;
+  },
+  deleteChild(state, key) {
+    if (state instanceof Map) {
+      state.delete(key);
       return state;
     }
+    if (state instanceof Set) {
+      state.delete(key);
+      return state;
+    }
+    if (Array.isArray(state) === true) {
+      if (key < 0) return state
+      state.splice(key, 1);
+      return state;
+    }
+    delete state[key];
+    return state;
   },
 };
 
@@ -46,54 +64,78 @@ const immutablePreset = {
   hasPath(state, key) {
     if (state instanceof Map || state instanceof Set) {
       return state.has(key);
-    } else if (typeof state === 'object' && state !== null) {
-      return state.hasOwnProperty(key);
-    } else {
-      return false;
     }
+    if (typeof state === 'object' && state !== null) {
+      return state.hasOwnProperty(key);
+    }
+    return false;
   },
   getValueByKey(state, key) {
     if (state instanceof Map) {
       return state.get(key);
-    } else if (state instanceof Set) {
-      return [...state][key];
-    } else if (typeof state === 'object' && state !== null) {
-      return state[key];
-    } else {
-      // TODO: ?
-      return state;
     }
+    if (state instanceof Set) {
+      return [...state][key];
+    }
+    if (typeof state === 'object' && state !== null) {
+      return state[key];
+    }
+    // TODO: ?
+    return state;
   },
   mergeStateAndPayload(state, payload) {
     if (state instanceof Map) {
       return new Map([...state, ...payload]);
-    } else if (state instanceof Set) {
-      return new Set([...state, ...payload]);
-    } else if (Array.isArray(state)) {
-      return payload; // ?
-    } else if (typeof state === 'object' && state !== null) {
-      return Object.assign({}, state, payload);
-    } else {
-      return payload;
     }
+    if (state instanceof Set) {
+      return new Set([...state, ...payload]);
+    }
+    if (Array.isArray(state)) {
+      return payload; // ?
+    }
+    if (typeof state === 'object' && state !== null) {
+      return Object.assign({}, state, payload);
+    }
+    return payload;
   },
   insertValueToStateByPath(state, key, value) {
     if (state instanceof Map) {
       return new Map(state).set(key, value);
-    } else if (state instanceof Set) {
+    }
+    if (state instanceof Set) {
       const newState = [...state];
       newState[key] = value;
       return new Set(newState);
-    } else if (Array.isArray(state)) {
+    }
+    if (Array.isArray(state)) {
       const newState = state.slice();
       newState[key] = value;
       return newState;
-    } else if (typeof state === 'object' && state !== null) {
-      return Object.assign({}, state, { [key]: value });
-    } else {
-      // TODO: ?
-      return state;
     }
+    if (typeof state === 'object' && state !== null) {
+      return Object.assign({}, state, { [key]: value });
+    }
+    // TODO: ?
+    return state;
+  },
+  deleteChild(state, key) {
+    if (state instanceof Map) {
+      const newState = new Map(state)
+      newState.delete(key);
+      return newState;
+    }
+    if (state instanceof Set) {
+      const newState = new Set([...state])
+      newState.delete(key);
+      return newState;
+    }
+    if (Array.isArray(state) === true) {
+      if (key === 0) return state.slice(1);
+      if (key < 0) return state
+      return state.slice(0, +key).concat(state.slice(+key + 1));
+    }
+    const { [key]: deleted, ...newState } = state;
+    return newState;
   },
 };
 
