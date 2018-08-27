@@ -1,6 +1,7 @@
 export type Unwatch = () => void
 export declare class Path<T> {
   set(value: T): void
+  del<K extends keyof T>(key: K): void
   get(): T
   watch(fn: (state: T) => void): Unwatch
   unwatch: Unwatch

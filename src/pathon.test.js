@@ -4,6 +4,7 @@ describe('pathon', () => {
   test('methods', () => {
     const pRoot = path('root', { child: true }, immutablePreset);
     expect(typeof pRoot.set).toBe('function');
+    expect(typeof pRoot.del).toBe('function');
     expect(typeof pRoot.get).toBe('function');
     expect(typeof pRoot.batch).toBe('function');
     expect(typeof pRoot.watch).toBe('function');
@@ -13,6 +14,7 @@ describe('pathon', () => {
 
     const pChild = pRoot.path('child');
     expect(typeof pChild.set).toBe('function');
+    expect(typeof pChild.del).toBe('function');
     expect(typeof pChild.get).toBe('function');
     expect(typeof pChild.batch).toBe('function');
     expect(typeof pChild.watch).toBe('function');
