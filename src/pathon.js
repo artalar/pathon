@@ -18,7 +18,7 @@ const mutablePreset = {
   },
   deleteChild(state, key) {
     if (Array.isArray(state) === true) {
-      if (key < 0) return state
+      if (key < 0) return state;
       state.splice(key, 1);
       return state;
     }
@@ -169,13 +169,17 @@ class Path extends PathSystem {
   }
 
   del(childKey) {
+    this.__freezeWatchers();
+    let newState;
     try {
       this.__children.delete(childKey);
-      const newState = this.__updaterPreset.deleteChild(this.get(), childKey);
+      newState = this.__updaterPreset.deleteChild(this.get(), childKey);
       this.__parent.__setChildStateToOwnStateByPath(this.__key, newState);
     } catch (e) {
       this.__catchError(e);
     }
+    this.__addWatchersForUpdate(this.__watchers, newState);
+    this.__unfreezeWatchers();
   }
 
   batch(callback) {

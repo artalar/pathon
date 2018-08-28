@@ -344,6 +344,17 @@ describe('pathon', () => {
         2: [{ 1: 1, 2: 2 }, { 2: 2 }, { 1: 1, 2: 2 }],
       });
     });
+
+    test('subscription', () => {
+      const pRoot = path('root', { 1: 1, 2: 2 }, preset);
+      const subscriptionToRoot = jest.fn();
+
+      pRoot.watch(subscriptionToRoot);
+
+      pRoot.del('1');
+
+      expect(subscriptionToRoot.mock.calls.length).toBe(1);
+    });
   };
 
   describe('immutablePreset', () => {
