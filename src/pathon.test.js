@@ -1,4 +1,4 @@
-const { path, immutablePreset } = require('./index');
+const { path, immutablePreset } = require('../es/index');
 
 describe('pathon', () => {
   test('methods', () => {

@@ -3,12 +3,15 @@ const path = require('path');
 module.exports = {
   mode: 'development',
   entry: path.join(__dirname, 'src/index.js'),
+  target: 'node',
   output: {
     filename: 'index.js',
     path: path.join(
       __dirname,
       process.env.BABEL_ENV === 'commonjs' ? 'lib' : 'es',
     ),
+    library: 'pathon',
+    libraryTarget: 'umd',
   },
   module: {
     rules: [
