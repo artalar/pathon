@@ -10,7 +10,6 @@ module.exports = {
               : 'last 2 Chrome versions',
           ],
         },
-        useBuiltIns: 'usage',
       },
     ],
   ],
