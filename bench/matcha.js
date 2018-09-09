@@ -178,8 +178,8 @@ suite('immutable noop', () => {
   );
 });
 
-/* pathon */ suite('immutable pathon from ../es', () => {
-  const { path, immutablePreset, mutablePreset } = require('../es');
+/* pathon */ suite('immutable pathon from ../lib', () => {
+  const { path, immutablePreset, mutablePreset } = require('../lib');
 
   const testDeepCounter = onlyCreation => () => {
     const { getSubscriberCalls, heavySubscriber } = createHeavySubscriber();

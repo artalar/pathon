@@ -16,6 +16,15 @@ const mutablePreset = {
 
     return state;
   },
+  deleteChild(state, key) {
+    if (Array.isArray(state) === true) {
+      if (key < 0) return state;
+      state.splice(key, 1);
+      return state;
+    }
+    delete state[key];
+    return state;
+  },
 };
 
 const safeExecutor = (f, ...args) => {
@@ -159,12 +168,27 @@ class Path extends PathSystem {
     return newState;
   }
 
+  del(childKey) {
+    this.__freezeWatchers();
+    let newState;
+    try {
+      this.__children.delete(childKey);
+      newState = this.__updaterPreset.deleteChild(this.get(), childKey);
+      this.__parent.__setChildStateToOwnStateByPath(this.__key, newState);
+    } catch (e) {
+      this.__catchError(e);
+    }
+    this.__addWatchersForUpdate(this.__watchers, newState);
+    this.__unfreezeWatchers();
+  }
+
   batch(callback) {
     try {
       this.__freezeWatchers();
       this.__ignoreSetFromChildLevel++;
       callback(this);
       this.__ignoreSetFromChildLevel--;
+      // TODO: it's realy needed?
       this.__parent.__setChildStateToOwnStateByPath(this.__key, this.get());
       this.__unfreezeWatchers();
     } catch (e) {

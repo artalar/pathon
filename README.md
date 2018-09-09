@@ -39,6 +39,7 @@ const {
   // Every method is a function:
   get, // get `path` value
   set, // set (and merge) value to `path`
+  del, // del value by key
   batch, // accept callback which u can do many set's without call subscriptions (only after `batch`)
   watch, // subscribe to updates
   unwatch, // unsubscribe
