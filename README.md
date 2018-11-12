@@ -14,6 +14,10 @@
 >
 > [![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/6rrm677pk)
 
+> React integration
+>
+> [![Demo](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/3qvz8vlqv5)
+
 # Instalation
 
 ```
