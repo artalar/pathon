@@ -1,3 +1,6 @@
+> # OUT OF DATE and NOT MAINTAINED
+> see https://github.com/artalar/ups
+
 # pathon
 
 <!-- path + O(n) ? -->
